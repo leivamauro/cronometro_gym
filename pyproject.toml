@@ -26,6 +26,7 @@ copyright = "Copyright (C) 2023-2026 by Flet"
 # opcion especial para linux
 # tipos ligth (es nativa de linux no soporta audios y videos) y full si soporta audios y videos
 desktop_flavor = "light"
+assets_dir = "src/assets"
 
 [tool.flet.app]
 path = "src"

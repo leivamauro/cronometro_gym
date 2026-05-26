@@ -1,25 +1,55 @@
+# python
 import flet as ft
+# locales
+from constants import *
+from controls.member_card import MemberCard
+from controls.header import Header
 
 
 def main(page: ft.Page):
-    counter = ft.Text("0", size=50, data=0)
+    page.title = "GymFlow Manager"
+    page.bgcolor = THEME_BG
+    page.padding = 20
+    page.theme_mode = ft.ThemeMode.DARK
+    page.assets_dir = "src/assets"
 
-    def increment_click(e):
-        counter.data += 1
-        counter.value = str(counter.data)
+    header = Header(page=page)
 
-    page.floating_action_button = ft.FloatingActionButton(
-        icon=ft.Icons.ADD, on_click=increment_click
-    )
-    page.add(
-        ft.SafeArea(
-            expand=True,
-            content=ft.Container(
-                content=counter,
-                alignment=ft.Alignment.CENTER,
+    members_list = ft.Column(
+        controls=[
+            MemberCard(
+                page=page,
+                name="Juan Pérez",
+                status_text="Cuota al día - Vence el 15 May 2026",
+                status_color=ft.Colors.GREEN,
+                payment_due=False,
             ),
+            MemberCard(
+                page=page,
+                name="María García",
+                status_text="Prueba - 5 días restantes",
+                status_color=ft.Colors.YELLOW,
+                payment_due=True,
+            ),
+            MemberCard(
+                page=page,
+                name="Carlos Rodríguez",
+                status_text="Vencido - Debe 2 meses ($6000)",
+                status_color=ft.Colors.RED,
+                payment_due=True,
+            ),
+        ],
+        expand=True,
+        scroll=ft.ScrollMode.AUTO,
+    )
+
+    page.add(
+        ft.Column(
+            controls=[header, members_list],
+            expand=True,
         )
     )
 
 
-ft.run(main)
+if __name__ == "__main__":
+    ft.run(main)
