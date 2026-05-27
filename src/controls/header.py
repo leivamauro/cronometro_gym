@@ -5,11 +5,8 @@ from constants import *
 
 
 class Header(ft.Container):
-    def __init__(self, page: ft.Page, on_add_member=None):
+    def __init__(self, is_mobile=False, on_add_member=None):
         super().__init__()
-
-        # Detectar si es pantalla pequeña (mobile)
-        is_mobile = page.width is not None and page.width < 600
 
         # Logo como círculo
         logo = ft.Container(

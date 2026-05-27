@@ -5,16 +5,13 @@ from constants import *
 from components.modal_pago import crear_modal_pago
 
 class MemberCard(ft.Container):
-    def __init__(self, page: ft.Page, name: str, status_text: str, status_color: str, payment_due: bool = False):
+    def __init__(self, page: ft.Page, is_mobile=False, name: str = "", status_text: str = "", status_color: str = "", payment_due: bool = False):
         super().__init__()
         self.name = name
         self.status_text = status_text
         self.status_color = status_color
         self.payment_due = payment_due
         self.page_ = page
-
-        # Detectar si es pantalla pequeña (mobile)
-        is_mobile = page.width is not None and page.width < 600
 
         # Configuración del contenedor de la tarjeta
         self.bgcolor = THEME_CARD_BG
@@ -60,13 +57,13 @@ class MemberCard(ft.Container):
             content=ft.Text(value="PAGAR"),
             bgcolor=pagar_button_bgcolor,
             color=pagar_button_color,
-            on_click=lambda e: None,
+            on_click=lambda e: self._open_modal_pago(e),
         )
         detalles_button = ft.FilledButton(
             content=ft.Text(value="DETALLES"),
             bgcolor=THEME_TEAL,
             color=THEME_TEAL_TEXT,
-            on_click=lambda e: self._open_modal_pago(e),
+            on_click=lambda e: None,
         )
 
         # Layout responsive
@@ -77,7 +74,7 @@ class MemberCard(ft.Container):
                     ft.Container(
                         content=traffic_light,
                         expand=3,
-                        alignment=ft.alignment.center,
+                        alignment=ft.Alignment.CENTER,
                     ),
                     ft.Column(
                         controls=[
@@ -122,6 +119,5 @@ class MemberCard(ft.Container):
             )
 
     def _open_modal_pago(self, e):
-        # Aquí se abriría el modal de pago específico para este miembro
-        modal = crear_modal_pago(self.name)
+        modal = crear_modal_pago(self.name, self.page_)
         self.page_.show_dialog(modal)
