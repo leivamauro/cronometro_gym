@@ -11,3 +11,6 @@ THEME_GREY_BUTTON_TEXT = "#606369"  # Texto de botón deshabilitado visualmente
 
 # Fondo del header (gris ligeramente más claro que THEME_BG)
 THEME_HEADER_BG = "#25282D"
+
+# Colores del tema (reutilizando la paleta anterior)
+THEME_BORDER_COLOR = "#50545C"

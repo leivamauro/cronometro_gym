@@ -5,7 +5,6 @@ from constants import *
 from controls.member_card import MemberCard
 from controls.header import Header
 
-
 def main(page: ft.Page):
     page.title = "GymFlow Manager"
     page.bgcolor = THEME_BG
