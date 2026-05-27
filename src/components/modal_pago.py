@@ -16,9 +16,10 @@ def crear_modal_pago(nombre_miembro: str, page: ft.Page):
             color=THEME_TEXT_PRIMARY,
             text_align=ft.TextAlign.CENTER,
         ),
-        bgcolor=THEME_HEADER_BG,
+        bgcolor=THEME_HEADER_BG_MODAL,
         padding=ft.Padding(20, 14, 20, 14),
         alignment=ft.Alignment.CENTER,
+        border_radius=ft.BorderRadius.only(top_left=12, top_right=12),
     )
 
     # --- Columna Izquierda: Dropdown y Total ---
@@ -38,8 +39,7 @@ def crear_modal_pago(nombre_miembro: str, page: ft.Page):
         color=THEME_TEXT_PRIMARY,
     )
 
-    total_text = ft.Text("Total: $3000", size=32, weight="bold",
-                         color=THEME_TEXT_PRIMARY)
+    total_text = ft.Text("Total: $3000", size=32, weight="bold", color=THEME_TEXT_PRIMARY)
 
     columna_izquierda = ft.Column(
         controls=[
@@ -102,8 +102,7 @@ def crear_modal_pago(nombre_miembro: str, page: ft.Page):
                     height=180,
                     alignment=ft.Alignment.CENTER,
                 ),
-                ft.Text("Escaneá el código QR para abonar",
-                        size=14, color=THEME_TEXT_PRIMARY),
+                ft.Text("Escaneá el código QR para abonar",size=14, color=THEME_TEXT_PRIMARY),
                 ft.Row(
                     controls=[confirmar_btn, cancelar_btn],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -155,8 +154,7 @@ def crear_modal_pago(nombre_miembro: str, page: ft.Page):
                                 padding=ft.Padding(20, 20, 20, 20),
                                 expand=True,
                             ),
-                            ft.VerticalDivider(width=1,
-                                               color=THEME_BORDER_COLOR),
+                            ft.VerticalDivider(width=1,color=THEME_BORDER_COLOR),
                             ft.Container(
                                 content=columna_derecha,
                                 padding=ft.Padding(20, 20, 20, 20),
