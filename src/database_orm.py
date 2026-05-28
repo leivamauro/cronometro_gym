@@ -1,4 +1,5 @@
 #python
+import os
 from datetime import datetime, timedelta
 #terceros
 from dateutil.relativedelta import relativedelta
@@ -221,6 +222,68 @@ def _dias_pasados(miembro: Miembro, session: Session) -> int:
     return max(0, diff.days)
 
 
-if __name__ == "__main__":
-    Base.metadata.create_all(engine) # crea todas las tablas de la base de datos
-    # Base.metadata.drop_all(engine) # elmina toda la base de datos
+def _estado_semaforo(miembro: Miembro, session: Session) -> str:
+    """
+    Retorna el estado del semáforo para la tarjeta del miembro.
+    ---
+    Entrada:
+        miembro (Miembro): Instancia del miembro.
+        session (Session): Sesión activa de SQLAlchemy.
+    Salida:
+        str: "vencido" = rojo, "en_prueba" = amarillo, "al_dia" = verde.
+    """
+    ahora = datetime.now()
+    inicio = _inicio_ciclo_pago(miembro)
+
+    if miembro.es_prueba and miembro.tiempo_prueba_dias > 0 and ahora < inicio:
+        return "en_prueba"
+
+    if _esta_vencido(miembro, session):
+        return "vencido"
+
+    return "al_dia"
+
+
+def _generar_status_text(miembro: Miembro, session: Session) -> str:
+    """
+    Genera el texto descriptivo del estado para mostrar en la tarjeta del miembro.
+    ---
+    Entrada:
+        miembro (Miembro): Instancia del miembro.
+        session (Session): Sesión activa de SQLAlchemy.
+    Salida:
+        str: Texto descriptivo del estado (ej: "Vencido - Debe 2 meses ($6000)").
+    """
+    estado = _estado_semaforo(miembro, session)
+
+    if estado == "vencido":
+        meses = _calcular_vencimiento(miembro, session)
+        config = session.query(Configuracion).filter_by(clave="precio_mensual").first()
+        precio = float(config.valor) if config else 3000
+        deuda = meses * precio
+        return f"Vencido - Debe {meses} meses (${deuda:.0f})"
+
+    if estado == "en_prueba":
+        inicio = _inicio_ciclo_pago(miembro)
+        dias = (inicio - datetime.now()).days
+        return f"Prueba - {dias} días restantes"
+
+    # al_dia
+    venc = _fecha_vencimiento(miembro, session)
+    return f"Cuota al día - Vence el {venc.strftime('%d %b %Y')}"
+
+
+def _inicializar_db():
+    """
+    Crea el directorio de la base de datos si no existe y
+    las tablas necesarias solo si no están creadas aún.
+    ---
+    create_all() ya tiene checkfirst=True por defecto:
+    no recrea tablas existentes.
+    """
+    os.makedirs("storage/data", exist_ok=True)
+    Base.metadata.create_all(engine)
+
+
+# Inicializar BD automáticamente al importar el módulo
+_inicializar_db()

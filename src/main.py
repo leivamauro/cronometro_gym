@@ -5,6 +5,8 @@ from constants import *
 from controls.member_card import MemberCard
 from controls.header import Header
 from components.modal_conf import crear_modal_conf
+from database_orm import Miembro, session as db_session
+from database_orm import _estado_semaforo, _generar_status_text
 
 
 def abrir_conf(page):
@@ -24,33 +26,35 @@ def main(page: ft.Page):
 
         header = Header(is_mobile=is_mobile)
 
+        # Obtener todos los miembros de la base de datos y crear una card por cada uno
+        miembros = db_session.query(Miembro).all()
+        cards = []
+        for m in miembros:
+            estado = _estado_semaforo(m, db_session)
+
+            if estado == "vencido":
+                color = ft.Colors.RED
+                payment_due = True
+            elif estado == "en_prueba":
+                color = ft.Colors.YELLOW
+                payment_due = True
+            else:
+                color = ft.Colors.GREEN
+                payment_due = False
+
+            cards.append(
+                MemberCard(
+                    page=page,
+                    is_mobile=is_mobile,
+                    name=m.nombre,
+                    status_text=_generar_status_text(m, db_session),
+                    status_color=color,
+                    payment_due=payment_due,
+                )
+            )
+
         members_list = ft.Column(
-            controls=[
-                MemberCard(
-                    page=page,
-                    is_mobile=is_mobile,
-                    name="Juan Pérez",
-                    status_text="Cuota al día - Vence el 15 May 2026",
-                    status_color=ft.Colors.GREEN,
-                    payment_due=False,
-                ),
-                MemberCard(
-                    page=page,
-                    is_mobile=is_mobile,
-                    name="María García",
-                    status_text="Prueba - 5 días restantes",
-                    status_color=ft.Colors.YELLOW,
-                    payment_due=True,
-                ),
-                MemberCard(
-                    page=page,
-                    is_mobile=is_mobile,
-                    name="Carlos Rodríguez",
-                    status_text="Vencido - Debe 2 meses ($6000)",
-                    status_color=ft.Colors.RED,
-                    payment_due=True,
-                ),
-            ],
+            controls=cards,
             expand=True,
             scroll=ft.ScrollMode.AUTO,
         )
