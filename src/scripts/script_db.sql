@@ -10,7 +10,7 @@ CREATE TABLE miembros(
     nombre TEXT NOT NULL,
     fecha_registro DATE NOT NULL,      -- Crucial para calcular el fin de la prueba
     fecha_vencimiento DATE,             -- Se actualiza con cada pago
-    es_prueba INTEGER DEFAULT 1 - - 1=En prueba, 0=Socio Activo
+    es_prueba INTEGER DEFAULT 1 -- 1=En prueba, 0=Socio Activo
 )
 
 -- 3. Tabla de Historial de Pagos

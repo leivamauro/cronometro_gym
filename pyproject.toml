@@ -8,7 +8,9 @@ authors = [
     { name = "Flet developer", email = "you@example.com" }
 ]
 dependencies = [
-    "flet>=0.85.2"
+    "flet>=0.85.2",
+    "SQLAlchemy",
+    "python-dateutil",
 ]
 
 [dependency-groups]
@@ -16,6 +18,7 @@ dev = [
     "flet-cli>=0.85.2",
     "flet-desktop>=0.85.2",
     "flet-web>=0.85.2",
+    
 ]
 
 [tool.flet]
