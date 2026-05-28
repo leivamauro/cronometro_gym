@@ -8,4 +8,4 @@ from database_orm import (
 
 
 class Database:
-    
+    pass
