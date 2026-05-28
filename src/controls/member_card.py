@@ -3,6 +3,7 @@ import flet as ft
 # locales
 from constants import *
 from components.modal_pago import crear_modal_pago
+from components.modal_detalle import crear_modal_detalles
 
 class MemberCard(ft.Container):
     def __init__(self, page: ft.Page, is_mobile=False, name: str = "", status_text: str = "", status_color: str = "", payment_due: bool = False):
@@ -63,7 +64,7 @@ class MemberCard(ft.Container):
             content=ft.Text(value="DETALLES"),
             bgcolor=THEME_TEAL,
             color=THEME_TEAL_TEXT,
-            on_click=lambda e: None,
+            on_click=lambda e: self._crear_modal_detalles(e),
         )
 
         # Layout responsive
@@ -120,4 +121,8 @@ class MemberCard(ft.Container):
 
     def _open_modal_pago(self, e):
         modal = crear_modal_pago(self.name, self.page_)
+        self.page_.show_dialog(modal)
+
+    def _crear_modal_detalles(self, e):
+        modal = crear_modal_detalles(self.name)
         self.page_.show_dialog(modal)
