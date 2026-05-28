@@ -4,6 +4,13 @@ import flet as ft
 from constants import *
 from controls.member_card import MemberCard
 from controls.header import Header
+from components.modal_conf import crear_modal_conf
+
+
+def abrir_conf(page):
+    modal = crear_modal_conf(page)
+    page.show_dialog(modal)
+
 
 def main(page: ft.Page):
     page.title = "GymFlow Manager"
@@ -48,13 +55,35 @@ def main(page: ft.Page):
             scroll=ft.ScrollMode.AUTO,
         )
 
-        return ft.Column(
-            controls=[header, members_list],
+        # Botón flotante de configuración (abajo a la izquierda)
+        settings_fab = ft.Container(
+            content=ft.Icon(
+                icon=ft.Icons.SETTINGS,
+                color=THEME_TEAL_TEXT,
+                size=20,
+            ),
+            width=44,
+            height=44,
+            border_radius=22,
+            bgcolor=THEME_TEAL,
+            alignment=ft.Alignment.CENTER,
+            on_click=lambda e: abrir_conf(page),
+        )
+
+        return ft.Stack(
+            controls=[
+                ft.Column(controls=[header, members_list], expand=True),
+                ft.Container(
+                    content=settings_fab,
+                    left=20,
+                    bottom=20,
+                ),
+            ],
             expand=True,
         )
 
-    layout_col = build_layout()
-    page.add(layout_col)
+    layout = build_layout()
+    page.add(layout)
 
     def on_resized(e):
         page.controls.clear()

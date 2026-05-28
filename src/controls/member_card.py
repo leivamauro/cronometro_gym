@@ -124,5 +124,5 @@ class MemberCard(ft.Container):
         self.page_.show_dialog(modal)
 
     def _crear_modal_detalles(self, e):
-        modal = crear_modal_detalles(self.name)
+        modal = crear_modal_detalles(self.name, self.page_)
         self.page_.show_dialog(modal)
