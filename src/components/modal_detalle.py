@@ -32,6 +32,7 @@ def crear_modal_detalles(nombre_miembro: str, page: ft.Page):
         style=ft.ButtonStyle(
             color=THEME_TEXT_PRIMARY,
             side=ft.BorderSide(1, THEME_BORDER_COLOR),
+            mouse_cursor=ft.MouseCursor.CLICK,
         ),
         on_click=cerrar_modal,
     )

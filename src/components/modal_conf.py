@@ -84,6 +84,7 @@ def crear_modal_conf(page: ft.Page, session):
         content=ft.Text("Guardar"),
         bgcolor=THEME_TEAL,
         color=THEME_TEAL_TEXT,
+        style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
         on_click=guardar_config,
     )
 
@@ -92,6 +93,7 @@ def crear_modal_conf(page: ft.Page, session):
         style=ft.ButtonStyle(
             color=THEME_TEXT_PRIMARY,
             side=ft.BorderSide(1, THEME_BORDER_COLOR),
+            mouse_cursor=ft.MouseCursor.CLICK,
         ),
         on_click=cerrar_modal,
     )

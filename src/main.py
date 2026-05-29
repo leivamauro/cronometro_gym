@@ -41,7 +41,7 @@ def main(page: ft.Page):
                 payment_due = True
             else:
                 color = ft.Colors.GREEN
-                payment_due = False
+                payment_due = True  # También puede adelantar pagos
 
             cards.append(
                 MemberCard(
@@ -64,17 +64,18 @@ def main(page: ft.Page):
 
         # Botón flotante de configuración (abajo a la izquierda)
         settings_fab = ft.Container(
-            content=ft.Icon(
+            content=ft.IconButton(
                 icon=ft.Icons.SETTINGS,
-                color=THEME_TEAL_TEXT,
-                size=20,
+                icon_color=THEME_TEAL_TEXT,
+                icon_size=20,
+                mouse_cursor=ft.MouseCursor.CLICK,
+                on_click=lambda e: abrir_conf(page),
             ),
             width=44,
             height=44,
             border_radius=22,
             bgcolor=THEME_TEAL,
             alignment=ft.Alignment.CENTER,
-            on_click=lambda e: abrir_conf(page),
         )
 
         return ft.Stack(

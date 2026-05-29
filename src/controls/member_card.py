@@ -4,6 +4,7 @@ import flet as ft
 from constants import *
 from components.modal_pago import crear_modal_pago
 from components.modal_detalle import crear_modal_detalles
+from components.modal_confirmacion import crear_modal_confirmacion
 from database_orm import session as db_session
 
 class MemberCard(ft.Container):
@@ -61,13 +62,25 @@ class MemberCard(ft.Container):
             content=ft.Text(value="PAGAR"),
             bgcolor=pagar_button_bgcolor,
             color=pagar_button_color,
+            style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
             on_click=lambda e: self._open_modal_pago(e),
         )
         detalles_button = ft.FilledButton(
             content=ft.Text(value="DETALLES"),
             bgcolor=THEME_TEAL,
             color=THEME_TEAL_TEXT,
+            style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
             on_click=lambda e: self._crear_modal_detalles(e),
+        )
+
+        # Botón eliminar (icono rojo)
+        delete_button = ft.IconButton(
+            icon=ft.Icons.DELETE,
+            icon_color=ft.Colors.RED,
+            icon_size=20,
+            tooltip="Eliminar miembro",
+            mouse_cursor=ft.MouseCursor.CLICK,
+            on_click=lambda e: self._confirmar_eliminar(e),
         )
 
         # Layout responsive
@@ -85,7 +98,7 @@ class MemberCard(ft.Container):
                             name_text,
                             status_text,
                             ft.Row(
-                                controls=[pagar_button, detalles_button],
+                                controls=[pagar_button, detalles_button, delete_button],
                                 spacing=8,
                             ),
                         ],
@@ -115,6 +128,7 @@ class MemberCard(ft.Container):
                         controls=[
                             pagar_button,
                             detalles_button,
+                            delete_button,
                         ],
                         spacing=10,
                     ),
@@ -124,6 +138,11 @@ class MemberCard(ft.Container):
 
     def _open_modal_pago(self, e):
         modal = crear_modal_pago(self.name, self.page_, db_session, self.miembro_id, on_guardar=self.on_guardar)
+        self.page_.show_dialog(modal)
+
+    def _confirmar_eliminar(self, e):
+        """Abre el modal de confirmación para eliminar al miembro."""
+        modal = crear_modal_confirmacion(self.name, self.page_, db_session, self.miembro_id, on_guardar=self.on_guardar)
         self.page_.show_dialog(modal)
 
     def _crear_modal_detalles(self, e):

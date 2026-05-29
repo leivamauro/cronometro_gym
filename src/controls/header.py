@@ -36,6 +36,7 @@ class Header(ft.Container):
             bgcolor=THEME_TEAL,
             color=THEME_TEAL_TEXT,
             icon=ft.Icons.ADD,
+            style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
             on_click=on_add_member or (lambda e: None),
         )
 

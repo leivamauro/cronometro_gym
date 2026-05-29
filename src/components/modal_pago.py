@@ -94,6 +94,7 @@ def crear_modal_pago(nombre_miembro: str, page: ft.Page, session, miembro_id: in
         content=ft.Text("Confirmar Pago"),
         bgcolor=THEME_TEAL,
         color=THEME_TEAL_TEXT,
+        style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
     )
 
     cancelar_btn = ft.OutlinedButton(
@@ -101,6 +102,7 @@ def crear_modal_pago(nombre_miembro: str, page: ft.Page, session, miembro_id: in
         style=ft.ButtonStyle(
             color=THEME_TEXT_PRIMARY,
             side=ft.BorderSide(1, THEME_BORDER_COLOR),
+            mouse_cursor=ft.MouseCursor.CLICK,
         ),
         on_click=cerrar_modal,
     )

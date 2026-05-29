@@ -87,6 +87,7 @@ def crear_modal_nuevo_miembro(page: ft.Page, session, on_guardar=None):
         content=ft.Text("Guardar"),
         bgcolor=THEME_TEAL,
         color=THEME_TEAL_TEXT,
+        style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
         on_click=guardar,
     )
 
@@ -95,6 +96,7 @@ def crear_modal_nuevo_miembro(page: ft.Page, session, on_guardar=None):
         style=ft.ButtonStyle(
             color=THEME_TEXT_PRIMARY,
             side=ft.BorderSide(1, THEME_BORDER_COLOR),
+            mouse_cursor=ft.MouseCursor.CLICK,
         ),
         on_click=cerrar_modal,
     )
