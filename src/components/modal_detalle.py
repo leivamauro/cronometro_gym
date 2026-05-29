@@ -7,7 +7,7 @@ from database_orm import (
     Miembro, HistorialPago,
     _estado_semaforo, _ultimo_pago,
     _calcular_vencimiento, _dias_restantes, _dias_pasados,
-    _leer_configuracion,
+    _inicio_ciclo_pago, _leer_configuracion,
 )
 
 
@@ -66,13 +66,13 @@ def crear_modal_detalles(nombre_miembro: str, page: ft.Page, session, miembro_id
 
     # --- Texto de estado y colores ---
     if estado == "vencido":
-        texto_estado = "Vencido (Rojo)"
+        texto_estado = "Vencido"
         color_estado = ft.Colors.RED
     elif estado == "en_prueba":
-        texto_estado = "En período de prueba (Amarillo)"
+        texto_estado = "En período de prueba"
         color_estado = ft.Colors.YELLOW
     else:
-        texto_estado = "Al día (Verde)"
+        texto_estado = "Al día"
         color_estado = ft.Colors.GREEN
 
     # --- Último pago formateado ---
@@ -91,15 +91,26 @@ def crear_modal_detalles(nombre_miembro: str, page: ft.Page, session, miembro_id
         deuda = meses * precio
         dias = _dias_pasados(miembro, session)
         lineas_deuda.append(
-            ft.Text(f"Debe {meses} meses (${deuda:.0f})", color=ft.Colors.RED, size=14)
+            ft.Text(f"Debe {meses} meses (${deuda:.0f})", color=ft.Colors.RED, size=14,
+                    overflow=ft.TextOverflow.ELLIPSIS)
         )
         lineas_deuda.append(
-            ft.Text(f"Vencido hace {dias} días", color=ft.Colors.RED, size=14)
+            ft.Text(f"Vencido hace {dias} días", color=ft.Colors.RED, size=14,
+                    overflow=ft.TextOverflow.ELLIPSIS)
+        )
+    elif estado == "en_prueba":
+        # Mostrar días restantes de prueba (no el primer vencimiento)
+        inicio = _inicio_ciclo_pago(miembro)
+        dias_prueba = (inicio - datetime.now()).days
+        lineas_deuda.append(
+            ft.Text(f"Prueba - {dias_prueba} días restantes", color=color_estado, size=14,
+                    overflow=ft.TextOverflow.ELLIPSIS)
         )
     else:
         dias = _dias_restantes(miembro, session)
         lineas_deuda.append(
-            ft.Text(f"Vence en {dias} días", color=color_estado, size=14)
+            ft.Text(f"Vence en {dias} días", color=color_estado, size=14,
+                    overflow=ft.TextOverflow.ELLIPSIS)
         )
 
     # --- Columna Izquierda: Información Detallada ---
@@ -107,12 +118,14 @@ def crear_modal_detalles(nombre_miembro: str, page: ft.Page, session, miembro_id
         controls=[
             ft.Text("Información Detallada", size=18, color=THEME_TEXT_PRIMARY),
             ft.Container(height=5),
-            ft.Text(f"Nombre: {nombre_miembro}", color=THEME_TEXT_PRIMARY, size=15),
+            ft.Text(f"Nombre: {nombre_miembro}", color=THEME_TEXT_PRIMARY, size=15,
+                    overflow=ft.TextOverflow.ELLIPSIS),
             ft.Text(
                 f"Fecha Registro: {miembro.fecha_registro.strftime('%d/%m/%Y')}",
                 color=THEME_TEXT_PRIMARY, size=15,
             ),
-            ft.Text(texto_ultimo_pago, color=THEME_TEXT_PRIMARY, size=15),
+            ft.Text(texto_ultimo_pago, color=THEME_TEXT_PRIMARY, size=15,
+                    overflow=ft.TextOverflow.ELLIPSIS),
             ft.Row(
                 controls=[
                     ft.Container(
@@ -120,7 +133,8 @@ def crear_modal_detalles(nombre_miembro: str, page: ft.Page, session, miembro_id
                         bgcolor=color_estado,
                     ),
                     ft.Text(f"Estado actual: {texto_estado}",
-                            color=THEME_TEXT_PRIMARY, size=15),
+                            color=THEME_TEXT_PRIMARY, size=15,
+                            overflow=ft.TextOverflow.ELLIPSIS),
                 ],
                 vertical_alignment=ft.CrossAxisAlignment.CENTER,
                 spacing=8,

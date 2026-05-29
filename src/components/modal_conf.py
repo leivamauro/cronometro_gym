@@ -63,21 +63,22 @@ def crear_modal_conf(page: ft.Page, session):
             e.control.value = limpio
             e.control.update()
 
-    prueba_field = ft.TextField(
-        label="Tiempo de prueba (días)",
-        value=_leer_configuracion("tiempo_prueba_dias", session, "7"),
-        border_color=THEME_BORDER_COLOR,
-        focused_border_color=THEME_TEAL,
-        color=THEME_TEXT_PRIMARY,
-        keyboard_type=ft.KeyboardType.NUMBER,
-        input_filter=ft.InputFilter(allow=True, regex_string=r"^\d*$", replacement_string=""),
-        on_change=_validar_entero,
-    )
+    # --- SE DESACTIVA YA QUE CADA MIEMBRO TIENE SU PROPIO TIEMPO DE PRUEBA ---
+    # prueba_field = ft.TextField(
+    #     label="Tiempo de prueba (días)",
+    #     value=_leer_configuracion("tiempo_prueba_dias", session, "7"),
+    #     border_color=THEME_BORDER_COLOR,
+    #     focused_border_color=THEME_TEAL,
+    #     color=THEME_TEXT_PRIMARY,
+    #     keyboard_type=ft.KeyboardType.NUMBER,
+    #     input_filter=ft.InputFilter(allow=True, regex_string=r"^\d*$", replacement_string=""),
+    #     on_change=_validar_entero,
+    # )
 
     # --- Botones ---
     def guardar_config(e):
         _guardar_configuracion("precio_mensual", precio_field.value, session)
-        _guardar_configuracion("tiempo_prueba_dias", prueba_field.value, session)
+        # _guardar_configuracion("tiempo_prueba_dias", prueba_field.value, session)
         cerrar_modal(e)
 
     guardar_btn = ft.FilledButton(
@@ -103,7 +104,7 @@ def crear_modal_conf(page: ft.Page, session):
         controls=[
             precio_field,
             ft.Container(height=15),
-            prueba_field,
+            # prueba_field,
             ft.Container(expand=True),
             ft.Row(
                 controls=[guardar_btn, cancelar_btn],
