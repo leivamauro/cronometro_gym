@@ -39,6 +39,13 @@ def crear_modal_nuevo_miembro(page: ft.Page, session, on_guardar=None):
         modal_nuevo.open = False
         page.update()
 
+    # --- Validación: permite solo números enteros ---
+    def _validar_entero(e):
+        limpio = ''.join(c for c in e.control.value if c.isdigit())
+        if limpio != e.control.value:
+            e.control.value = limpio
+            e.control.update()
+
     # --- Campos de entrada ---
     nombre_field = ft.TextField(
         label="Nombre del miembro",
@@ -54,6 +61,8 @@ def crear_modal_nuevo_miembro(page: ft.Page, session, on_guardar=None):
         focused_border_color=THEME_TEAL,
         color=THEME_TEXT_PRIMARY,
         keyboard_type=ft.KeyboardType.NUMBER,
+        input_filter=ft.InputFilter(allow=True, regex_string=r"^\d*$", replacement_string=""),
+        on_change=_validar_entero,
     )
 
     # --- Botones ---

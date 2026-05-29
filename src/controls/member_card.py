@@ -4,14 +4,17 @@ import flet as ft
 from constants import *
 from components.modal_pago import crear_modal_pago
 from components.modal_detalle import crear_modal_detalles
+from database_orm import session as db_session
 
 class MemberCard(ft.Container):
-    def __init__(self, page: ft.Page, is_mobile=False, name: str = "", status_text: str = "", status_color: str = "", payment_due: bool = False):
+    def __init__(self, page: ft.Page, is_mobile=False, name: str = "", status_text: str = "", status_color: str = "", payment_due: bool = False, miembro_id: int = 0, on_guardar=None):
         super().__init__()
         self.name = name
         self.status_text = status_text
         self.status_color = status_color
         self.payment_due = payment_due
+        self.miembro_id = miembro_id
+        self.on_guardar = on_guardar
         self.page_ = page
 
         # Configuración del contenedor de la tarjeta
@@ -120,7 +123,7 @@ class MemberCard(ft.Container):
             )
 
     def _open_modal_pago(self, e):
-        modal = crear_modal_pago(self.name, self.page_)
+        modal = crear_modal_pago(self.name, self.page_, db_session, self.miembro_id, on_guardar=self.on_guardar)
         self.page_.show_dialog(modal)
 
     def _crear_modal_detalles(self, e):

@@ -51,6 +51,8 @@ def main(page: ft.Page):
                     status_text=_generar_status_text(m, db_session),
                     status_color=color,
                     payment_due=payment_due,
+                    miembro_id=m.id,
+                    on_guardar=reconstruir,
                 )
             )
 

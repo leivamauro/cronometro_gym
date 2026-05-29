@@ -28,6 +28,22 @@ def crear_modal_conf(page: ft.Page, session):
         modal_conf.open = False
         page.update()
 
+    # --- Validación: permite solo dígitos y un punto decimal (máx 2 decimales) ---
+    def _validar_decimal(e):
+        valor = e.control.value
+        # Conservar solo números y el primer punto
+        limpio = ''.join(c for c in valor if c.isdigit() or c == '.')
+        if limpio.count('.') > 1:
+            partes = limpio.split('.')
+            limpio = partes[0] + '.' + ''.join(partes[1:])
+        # Máximo 2 decimales
+        if '.' in limpio:
+            entero, decimal = limpio.split('.')
+            limpio = entero + '.' + decimal[:2]
+        if limpio != valor:
+            e.control.value = limpio
+            e.control.update()
+
     # --- Campos de entrada (precargados desde la BD) ---
     precio_field = ft.TextField(
         label="Precio mensual",
@@ -36,7 +52,16 @@ def crear_modal_conf(page: ft.Page, session):
         focused_border_color=THEME_TEAL,
         color=THEME_TEXT_PRIMARY,
         keyboard_type=ft.KeyboardType.NUMBER,
+        input_filter=ft.InputFilter(allow=True, regex_string=r"^\d*\.?\d{0,2}$", replacement_string=""),
+        on_change=_validar_decimal,
     )
+
+    # --- Validación: permite solo números enteros ---
+    def _validar_entero(e):
+        limpio = ''.join(c for c in e.control.value if c.isdigit())
+        if limpio != e.control.value:
+            e.control.value = limpio
+            e.control.update()
 
     prueba_field = ft.TextField(
         label="Tiempo de prueba (días)",
@@ -45,6 +70,8 @@ def crear_modal_conf(page: ft.Page, session):
         focused_border_color=THEME_TEAL,
         color=THEME_TEXT_PRIMARY,
         keyboard_type=ft.KeyboardType.NUMBER,
+        input_filter=ft.InputFilter(allow=True, regex_string=r"^\d*$", replacement_string=""),
+        on_change=_validar_entero,
     )
 
     # --- Botones ---
