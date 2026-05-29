@@ -5,12 +5,13 @@ from constants import *
 from controls.member_card import MemberCard
 from controls.header import Header
 from components.modal_conf import crear_modal_conf
+from components.modal_nuevo_miembro import crear_modal_nuevo_miembro
 from database_orm import Miembro, session as db_session
 from database_orm import _estado_semaforo, _generar_status_text
 
 
 def abrir_conf(page):
-    modal = crear_modal_conf(page)
+    modal = crear_modal_conf(page, db_session)
     page.show_dialog(modal)
 
 
@@ -24,7 +25,7 @@ def main(page: ft.Page):
     def build_layout():
         is_mobile = page.width is not None and page.width < 600
 
-        header = Header(is_mobile=is_mobile)
+        header = Header(is_mobile=is_mobile, on_add_member=lambda e: abrir_nuevo_miembro())
 
         # Obtener todos los miembros de la base de datos y crear una card por cada uno
         miembros = db_session.query(Miembro).all()
@@ -85,6 +86,15 @@ def main(page: ft.Page):
             ],
             expand=True,
         )
+
+    def reconstruir():
+        page.controls.clear()
+        page.add(build_layout())
+        page.update()
+
+    def abrir_nuevo_miembro():
+        modal = crear_modal_nuevo_miembro(page, db_session, on_guardar=reconstruir)
+        page.show_dialog(modal)
 
     layout = build_layout()
     page.add(layout)

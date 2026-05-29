@@ -244,6 +244,41 @@ def _estado_semaforo(miembro: Miembro, session: Session) -> str:
     return "al_dia"
 
 
+def _leer_configuracion(clave: str, session: Session, default: str = "") -> str:
+    """
+    Lee un valor de configuración de la base de datos.
+    ---
+    Entrada:
+        clave (str): Clave de configuración (ej: "precio_mensual").
+        session (Session): Sesión activa de SQLAlchemy.
+        default (str): Valor por defecto si no existe la clave.
+    Salida:
+        str: Valor de la configuración o default si no existe.
+    """
+    config = session.query(Configuracion).filter_by(clave=clave).first()
+    return config.valor if config else default
+
+
+def _guardar_configuracion(clave: str, valor: str, session: Session) -> None:
+    """
+    Guarda o actualiza un valor de configuración en la base de datos.
+    Si la clave ya existe, sobrescribe el valor. Si no, la crea.
+    ---
+    Entrada:
+        clave (str): Clave de configuración (ej: "precio_mensual").
+        valor (str): Valor a guardar.
+        session (Session): Sesión activa de SQLAlchemy.
+    Salida:
+        None
+    """
+    config = session.query(Configuracion).filter_by(clave=clave).first()
+    if config:
+        config.valor = valor
+    else:
+        session.add(Configuracion(clave=clave, valor=valor))
+    session.commit()
+
+
 def _generar_status_text(miembro: Miembro, session: Session) -> str:
     """
     Genera el texto descriptivo del estado para mostrar en la tarjeta del miembro.
@@ -258,8 +293,7 @@ def _generar_status_text(miembro: Miembro, session: Session) -> str:
 
     if estado == "vencido":
         meses = _calcular_vencimiento(miembro, session)
-        config = session.query(Configuracion).filter_by(clave="precio_mensual").first()
-        precio = float(config.valor) if config else 3000
+        precio = float(_leer_configuracion("precio_mensual", session, "3000"))
         deuda = meses * precio
         return f"Vencido - Debe {meses} meses (${deuda:.0f})"
 

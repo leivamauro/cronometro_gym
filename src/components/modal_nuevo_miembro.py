@@ -1,17 +1,28 @@
 # python
+from datetime import datetime
 import flet as ft
 # local
 from constants import *
-from database_orm import _leer_configuracion, _guardar_configuracion
+from database_orm import Miembro, _leer_configuracion
 
 
-def crear_modal_conf(page: ft.Page, session):
+def crear_modal_nuevo_miembro(page: ft.Page, session, on_guardar=None):
+    """
+    Crea y retorna un AlertDialog para inscribir un nuevo miembro.
+    ---
+    Entrada:
+        page (ft.Page): Página de Flet.
+        session (Session): Sesión activa de SQLAlchemy.
+        on_guardar (callable, opcional): Callback al guardar (para refrescar la UI).
+    Salida:
+        ft.AlertDialog: Modal de nuevo miembro.
+    """
     is_mobile = page.width is not None and page.width < 600
 
-    # --- Header del modal (unificado con modal_pago) ---
+    # --- Header del modal (unificado) ---
     header = ft.Container(
         content=ft.Text(
-            "Configuración",
+            "Nuevo Miembro",
             size=14,
             weight="bold",
             color=THEME_TEXT_PRIMARY,
@@ -25,17 +36,15 @@ def crear_modal_conf(page: ft.Page, session):
 
     # --- Acción cerrar ---
     def cerrar_modal(e):
-        modal_conf.open = False
+        modal_nuevo.open = False
         page.update()
 
-    # --- Campos de entrada (precargados desde la BD) ---
-    precio_field = ft.TextField(
-        label="Precio mensual",
-        value=_leer_configuracion("precio_mensual", session, "3000"),
+    # --- Campos de entrada ---
+    nombre_field = ft.TextField(
+        label="Nombre del miembro",
         border_color=THEME_BORDER_COLOR,
         focused_border_color=THEME_TEAL,
         color=THEME_TEXT_PRIMARY,
-        keyboard_type=ft.KeyboardType.NUMBER,
     )
 
     prueba_field = ft.TextField(
@@ -48,16 +57,28 @@ def crear_modal_conf(page: ft.Page, session):
     )
 
     # --- Botones ---
-    def guardar_config(e):
-        _guardar_configuracion("precio_mensual", precio_field.value, session)
-        _guardar_configuracion("tiempo_prueba_dias", prueba_field.value, session)
+    def guardar(e):
+        nombre = nombre_field.value.strip()
+        if not nombre:
+            return
+
+        m = Miembro(
+            nombre=nombre,
+            fecha_registro=datetime.now(),
+            es_prueba=True,
+            tiempo_prueba_dias=int(prueba_field.value or 0),
+        )
+        session.add(m)
+        session.commit()
         cerrar_modal(e)
+        if on_guardar:
+            on_guardar()
 
     guardar_btn = ft.FilledButton(
         content=ft.Text("Guardar"),
         bgcolor=THEME_TEAL,
         color=THEME_TEAL_TEXT,
-        on_click=guardar_config,
+        on_click=guardar,
     )
 
     cancelar_btn = ft.OutlinedButton(
@@ -72,7 +93,7 @@ def crear_modal_conf(page: ft.Page, session):
     # --- Cuerpo del modal ---
     campos = ft.Column(
         controls=[
-            precio_field,
+            nombre_field,
             ft.Container(height=15),
             prueba_field,
             ft.Container(expand=True),
@@ -95,7 +116,7 @@ def crear_modal_conf(page: ft.Page, session):
         ],
     )
 
-    modal_conf = ft.AlertDialog(
+    modal_nuevo = ft.AlertDialog(
         modal=True,
         bgcolor=THEME_CARD_BG,
         shape=ft.RoundedRectangleBorder(radius=12),
@@ -107,4 +128,4 @@ def crear_modal_conf(page: ft.Page, session):
         content_padding=ft.Padding.all(0),
     )
 
-    return modal_conf
+    return modal_nuevo
