@@ -146,5 +146,7 @@ class MemberCard(ft.Container):
         self.page_.show_dialog(modal)
 
     def _crear_modal_detalles(self, e):
-        modal = crear_modal_detalles(self.name, self.page_)
-        self.page_.show_dialog(modal)
+        """Abre el modal de detalles con los datos reales del miembro desde la BD."""
+        modal = crear_modal_detalles(self.name, self.page_, db_session, self.miembro_id)
+        if modal:
+            self.page_.show_dialog(modal)
