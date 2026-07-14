@@ -10,19 +10,24 @@ class Header(ft.Container):
         super().__init__()
 
         # Logo como círculo
-        logo = ft.Container(
-            content=ft.Image(
-                src="src/assets/icon.png",
-                width=40,
-                height=40,
-                fit="cover",
-            ),
-            width=50,
-            height=50,
-            border_radius=25,
-            clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+        logo = ft.Row(
+            controls=[
+                ft.Container(
+                    content=ft.Image(
+                        src="src/assets/icon.png",
+                        width=50,
+                        height=50,
+                        fit="cover",
+                    ),
+                    width=50,
+                    height=50,
+                    border_radius=25,
+                    clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+                ),
+            ],
             col=BREAK_POINTS,
-        )
+            alignment=ft.MainAxisAlignment.CENTER,
+        ) 
 
         # Título
         title = ft.Text(
