@@ -134,17 +134,13 @@ def crear_modal_pago(nombre_miembro: str, page: ft.Page, session, miembro_id: in
 
     confirmar_btn.on_click = confirmar_pago
 
-    # Contenedor QR que ocupa ~80-90% del espacio disponible en la derecha
-    qr_container = ft.Container(
-        content=ft.Image(
-            src="src/assets/qr_ejemplo.png",
-            fit="contain",
-            expand=True,
-        ),
-        bgcolor=ft.Colors.WHITE,
-        border_radius=12,
-        expand=True,
-        alignment=ft.Alignment.CENTER,
+    alias = _leer_configuracion("alias", session, "")
+
+    alias_display = ft.Text(
+        f"Alias: {alias}" if alias else "Sin alias configurado",
+        size=16,
+        color=THEME_TEXT_PRIMARY,
+        text_align=ft.TextAlign.CENTER,
     )
 
     if is_mobile:
@@ -152,19 +148,9 @@ def crear_modal_pago(nombre_miembro: str, page: ft.Page, session, miembro_id: in
 
         columna_derecha = ft.Column(
             controls=[
-                ft.Container(
-                    content=ft.Image(
-                        src="src/assets/qr_ejemplo.png",
-                        fit="contain",
-                        expand=True,
-                    ),
-                    bgcolor=ft.Colors.WHITE,
-                    border_radius=12,
-                    height=180,
-                    alignment=ft.Alignment.CENTER,
-                ),
-                ft.Text("Escaneá el código QR para abonar",
-                        size=14, color=THEME_TEXT_PRIMARY),
+                ft.Container(expand=True),
+                alias_display,
+                ft.Container(expand=True),
                 ft.Row(
                     controls=[confirmar_btn, cancelar_btn],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -185,9 +171,9 @@ def crear_modal_pago(nombre_miembro: str, page: ft.Page, session, miembro_id: in
     else:
         columna_derecha = ft.Column(
             controls=[
-                qr_container,
-                ft.Text("Escaneá el código QR para abonar",
-                        size=14, color=THEME_TEXT_PRIMARY),
+                ft.Container(expand=True),
+                alias_display,
+                ft.Container(expand=True),
                 ft.Row(
                     controls=[confirmar_btn, cancelar_btn],
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,

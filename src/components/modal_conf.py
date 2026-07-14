@@ -56,6 +56,14 @@ def crear_modal_conf(page: ft.Page, session):
         on_change=_validar_decimal,
     )
 
+    alias_field = ft.TextField(
+        label="Alias",
+        value=_leer_configuracion("alias", session, ""),
+        border_color=THEME_BORDER_COLOR,
+        focused_border_color=THEME_TEAL,
+        color=THEME_TEXT_PRIMARY,
+    )
+
     # --- Validación: permite solo números enteros ---
     def _validar_entero(e):
         limpio = ''.join(c for c in e.control.value if c.isdigit())
@@ -78,7 +86,7 @@ def crear_modal_conf(page: ft.Page, session):
     # --- Botones ---
     def guardar_config(e):
         _guardar_configuracion("precio_mensual", precio_field.value, session)
-        # _guardar_configuracion("tiempo_prueba_dias", prueba_field.value, session)
+        _guardar_configuracion("alias", alias_field.value, session)
         cerrar_modal(e)
 
     guardar_btn = ft.FilledButton(
@@ -104,7 +112,7 @@ def crear_modal_conf(page: ft.Page, session):
         controls=[
             precio_field,
             ft.Container(height=15),
-            # prueba_field,
+            alias_field,
             ft.Container(expand=True),
             ft.Row(
                 controls=[guardar_btn, cancelar_btn],
