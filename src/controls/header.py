@@ -5,6 +5,7 @@ from constants import *
 
 
 class Header(ft.Container):
+
     def __init__(self, is_mobile=False, on_add_member=None):
         super().__init__()
 
@@ -20,14 +21,18 @@ class Header(ft.Container):
             height=50,
             border_radius=25,
             clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
+            col=BREAK_POINTS,
         )
 
         # Título
         title = ft.Text(
-            "GymFlow Manager",
+            "RecoverFit",
             color=THEME_TEXT_PRIMARY,
             size=24 if is_mobile else 32,
             weight="bold",
+            text_align=ft.TextAlign.CENTER,
+            expand=True,
+            col=BREAK_POINTS,
         )
 
         # Botón
@@ -38,39 +43,24 @@ class Header(ft.Container):
             icon=ft.Icons.ADD,
             style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
             on_click=on_add_member or (lambda e: None),
+            col=BREAK_POINTS,
         )
 
-        # Layout responsive
-        if is_mobile:
-            content = ft.Column(
-                controls=[
-                    ft.Row(
-                        controls=[logo, title],
-                        spacing=15,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    ),
-                    ft.Row(
-                        controls=[button],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                    ),
-                ],
-                spacing=12,
-            )
-            self.padding = ft.Padding(20, 16, 20, 16)
-        else:
-            content = ft.Row(
-                controls=[
-                    ft.Row(
-                        controls=[logo, title],
-                        spacing=15,
-                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
-                    ),
-                    button,
-                ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            )
-            self.padding = ft.Padding(20, 16, 20, 16)
+        
+        content = ft.Row(
+            controls=[
+                ft.ResponsiveRow(
+                    controls=[logo, title, button],
+                    spacing=15,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    expand=True,
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ),
+            ],
+            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        )
+        self.padding = ft.Padding(20, 16, 20, 16)
 
         self.content = content
         self.bgcolor = THEME_HEADER_BG

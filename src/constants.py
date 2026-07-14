@@ -1,3 +1,5 @@
+from flet import ResponsiveRowBreakpoint
+
 # Definir colores del tema para mayor fidelidad a la imagen
 THEME_BG = "#1E2125"  # Fondo oscuro de la página
 THEME_CARD_BG = "#2B2E33"  # Fondo de cada tarjeta de miembro
@@ -16,3 +18,10 @@ THEME_HEADER_BG_MODAL = "#606369"
 
 # Colores del tema (reutilizando la paleta anterior)
 THEME_BORDER_COLOR = "#50545C"
+
+
+BREAK_POINTS = {
+    ResponsiveRowBreakpoint.XS: 12,
+    ResponsiveRowBreakpoint.MD: 4,
+    ResponsiveRowBreakpoint.LG: 3,
+}

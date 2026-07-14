@@ -16,11 +16,13 @@ def abrir_conf(page):
 
 
 def main(page: ft.Page):
-    page.title = "GymFlow Manager"
+    page.title = "RecoverFit"
     page.bgcolor = THEME_BG
     page.padding = 20
     page.theme_mode = ft.ThemeMode.DARK
     page.assets_dir = "src/assets"
+    # para que funcione el modo responsive la pantalla debe ser menor a 600 px de ancho
+    page.width = 400 
 
     def build_layout():
         is_mobile = page.width is not None and page.width < 600
