@@ -6,7 +6,7 @@ from constants import *
 
 class Header(ft.Container):
 
-    def __init__(self, is_mobile=False, on_add_member=None):
+    def __init__(self, on_add_member=None):
         super().__init__()
 
         # Logo como círculo
@@ -33,7 +33,7 @@ class Header(ft.Container):
         title = ft.Text(
             "RecoverFit",
             color=THEME_TEXT_PRIMARY,
-            size=24 if is_mobile else 32,
+            size=32,
             weight="bold",
             text_align=ft.TextAlign.CENTER,
             expand=True,
@@ -42,7 +42,7 @@ class Header(ft.Container):
 
         # Botón
         button = ft.FilledButton(
-            content=ft.Text(value="NUEVO MIEMBRO"),
+            content=ft.Text(value="AGREGAR"),
             bgcolor=THEME_TEAL,
             color=THEME_TEAL_TEXT,
             icon=ft.Icons.ADD,

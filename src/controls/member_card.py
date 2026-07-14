@@ -8,8 +8,10 @@ from components.modal_confirmacion import crear_modal_confirmacion
 from database_orm import session as db_session
 
 class MemberCard(ft.Container):
-    def __init__(self, page: ft.Page, is_mobile=False, name: str = "", status_text: str = "", status_color: str = "", payment_due: bool = False, miembro_id: int = 0, on_guardar=None):
+
+    def __init__(self, page: ft.Page, name: str = "", status_text: str = "", status_color: str = "", payment_due: bool = False, miembro_id: int = 0, on_guardar=None):
         super().__init__()
+        self.expand = True
         self.name = name
         self.status_text = status_text
         self.status_color = status_color
@@ -23,10 +25,7 @@ class MemberCard(ft.Container):
         self.border_radius = 12
         self.margin = ft.Margin.only(bottom=10)
 
-        if is_mobile:
-            self.padding = ft.Padding(15, 15, 20, 15)
-        else:
-            self.padding = ft.Padding(20, 20, 20, 20)
+        self.padding = ft.Padding(20, 20, 20, 20)
 
         # Determinar colores del botón "PAGAR" según el estado
         if self.payment_due:
@@ -48,13 +47,13 @@ class MemberCard(ft.Container):
         name_text = ft.Text(
             self.name,
             color=THEME_TEXT_PRIMARY,
-            size=20 if is_mobile else 24,
+            size=24,
             weight="bold",
         )
         status_text = ft.Text(
             self.status_text,
             color=THEME_TEXT_SECONDARY,
-            size=14 if is_mobile else 16,
+            size=16,
         )
 
         # Botones de acción
@@ -83,58 +82,47 @@ class MemberCard(ft.Container):
             on_click=lambda e: self._confirmar_eliminar(e),
         )
 
-        # Layout responsive
-        if is_mobile:
-            # Mobile: izquierda 30% (semáforo), derecha 70% (nombre + estado + botones)
-            self.content = ft.Row(
-                controls=[
-                    ft.Container(
-                        content=traffic_light,
-                        expand=3,
-                        alignment=ft.Alignment.CENTER,
-                    ),
-                    ft.Column(
-                        controls=[
-                            name_text,
-                            status_text,
-                            ft.Row(
-                                controls=[pagar_button, detalles_button, delete_button],
-                                spacing=8,
-                            ),
-                        ],
-                        expand=7,
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        horizontal_alignment=ft.CrossAxisAlignment.START,
-                    ),
-                ],
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            )
-        else:
-            # Desktop: layout original en una fila
-            self.content = ft.Row(
-                controls=[
-                    traffic_light,
-                    ft.Container(width=15),
-                    ft.Column(
-                        controls=[
-                            name_text,
-                            status_text,
-                        ],
-                        alignment=ft.MainAxisAlignment.CENTER,
-                        horizontal_alignment=ft.CrossAxisAlignment.START,
-                    ),
-                    ft.Container(expand=True),
-                    ft.Row(
-                        controls=[
-                            pagar_button,
-                            detalles_button,
-                            delete_button,
-                        ],
-                        spacing=10,
-                    ),
-                ],
-                vertical_alignment=ft.CrossAxisAlignment.CENTER,
-            )
+        self.content = ft.ResponsiveRow(
+            controls=[
+                ft.Row(
+                    controls=[traffic_light],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    col={
+                        ft.ResponsiveRowBreakpoint.XS: 12,
+                        ft.ResponsiveRowBreakpoint.MD: 2,
+                        ft.ResponsiveRowBreakpoint.LG: 1,
+                    },
+                ),
+                ft.Column(
+                    controls=[name_text, status_text],
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    horizontal_alignment=ft.CrossAxisAlignment.START,
+                    col={
+                        ft.ResponsiveRowBreakpoint.XS: 12,
+                        ft.ResponsiveRowBreakpoint.MD: 5,
+                        ft.ResponsiveRowBreakpoint.LG: 7,
+                    },
+                    expand=True,
+                ),
+                ft.ResponsiveRow(
+                    controls=[
+                        ft.Row(
+                            controls=[pagar_button, detalles_button, delete_button],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                        ),
+                    ],
+                    spacing=10,
+                    alignment=ft.MainAxisAlignment.CENTER,
+                    col={
+                        ft.ResponsiveRowBreakpoint.XS: 12,
+                        ft.ResponsiveRowBreakpoint.MD: 5,
+                        ft.ResponsiveRowBreakpoint.LG: 4,
+                    },
+                ),
+            ],
+            spacing=10,
+            vertical_alignment=ft.CrossAxisAlignment.CENTER,
+        )
 
     def _open_modal_pago(self, e):
         modal = crear_modal_pago(self.name, self.page_, db_session, self.miembro_id, on_guardar=self.on_guardar)

@@ -1,4 +1,6 @@
 from flet import ResponsiveRowBreakpoint
+import os
+from pathlib import Path
 
 # Definir colores del tema para mayor fidelidad a la imagen
 THEME_BG = "#1E2125"  # Fondo oscuro de la página
@@ -25,3 +27,5 @@ BREAK_POINTS = {
     ResponsiveRowBreakpoint.MD: 4,
     ResponsiveRowBreakpoint.LG: 3,
 }
+
+ASSETS_DIR = Path(os.environ.get("FLET_ASSETS_DIR")).resolve()

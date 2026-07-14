@@ -22,12 +22,10 @@ def main(page: ft.Page):
     page.theme_mode = ft.ThemeMode.DARK
     page.assets_dir = "src/assets"
     # para que funcione el modo responsive la pantalla debe ser menor a 600 px de ancho
-    page.width = 400 
 
     def build_layout():
-        is_mobile = page.width is not None and page.width < 600
 
-        header = Header(is_mobile=is_mobile, on_add_member=lambda e: abrir_nuevo_miembro())
+        header = Header(on_add_member=lambda e: abrir_nuevo_miembro())
 
         # Obtener todos los miembros de la base de datos y crear una card por cada uno
         miembros = db_session.query(Miembro).all()
@@ -48,7 +46,6 @@ def main(page: ft.Page):
             cards.append(
                 MemberCard(
                     page=page,
-                    is_mobile=is_mobile,
                     name=m.nombre,
                     status_text=_generar_status_text(m, db_session),
                     status_color=color,
@@ -103,13 +100,6 @@ def main(page: ft.Page):
 
     layout = build_layout()
     page.add(layout)
-
-    def on_resized(e):
-        page.controls.clear()
-        page.add(build_layout())
-        page.update()
-
-    page.on_resized = on_resized
 
 
 if __name__ == "__main__":
