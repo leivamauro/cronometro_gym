@@ -1,7 +1,7 @@
 [project]
-name = "gestion-pagos"
-version = "0.1.0"
-description = ""
+name = "RecoverFit"
+version = "1.0.0"
+description = "Aplicacion de gestion de pagos y clientes para RecoverFit"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
@@ -18,13 +18,12 @@ dev = [
     "flet-cli==0.85.2",
     "flet-desktop==0.85.2",
     "flet-web==0.85.2",
-    
 ]
 
 [tool.flet]
 org = "com.recoverfit"
 product = "gestion RecoverFit"
-company = "Flet"
+company = "RecoverFit"
 copyright = "Copyright (C) 2023-2026"
 assets_dir = "src/assets"
 
