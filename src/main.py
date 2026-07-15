@@ -1,7 +1,6 @@
 # python
 import os
 import sys
-import traceback
 import logging
 from pathlib import Path
 
@@ -11,30 +10,22 @@ try:
 except Exception:
     _log_dir = Path.home()
 logging.basicConfig(
-    filename=str(_log_dir / "gestion_pagos_diag.log"),
-    level=logging.DEBUG,
-    format="%(asctime)s %(levelname)s %(message)s",
+    filename=str(_log_dir / "gestion_pagos.log"),
+    level=logging.WARNING,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
-logging.getLogger().addHandler(logging.StreamHandler(sys.stderr))
-logging.info("=== Inicio de la aplicacion (diagnostico) ===")
-logging.info("FLET_APP_STORAGE_DATA=%s", os.environ.get("FLET_APP_STORAGE_DATA"))
-logging.info("FLET_ASSETS_DIR=%s", os.environ.get("FLET_ASSETS_DIR"))
-logging.info("sys.executable=%s", sys.executable)
-logging.info("cwd=%s", os.getcwd())
+sys.excepthook = lambda ety, eval, etb: logging.error(
+    "Excepcion no manejada", exc_info=(ety, eval, etb)
+)
 
-try:
-    import flet as ft
-    from constants import *
-    from controls.member_card import MemberCard
-    from controls.header import Header
-    from components.modal_conf import crear_modal_conf
-    from components.modal_nuevo_miembro import crear_modal_nuevo_miembro
-    from database_orm import Miembro, session as db_session
-    from database_orm import _estado_semaforo, _generar_status_text
-    logging.info("Imports completados OK")
-except Exception:
-    logging.error("ERROR en imports:\n%s", traceback.format_exc())
-    raise
+import flet as ft
+from constants import *
+from controls.member_card import MemberCard
+from controls.header import Header
+from components.modal_conf import crear_modal_conf
+from components.modal_nuevo_miembro import crear_modal_nuevo_miembro
+from database_orm import Miembro, session as db_session
+from database_orm import _estado_semaforo, _generar_status_text
 
 
 def abrir_conf(page):
@@ -43,12 +34,10 @@ def abrir_conf(page):
 
 
 def main(page: ft.Page):
-    logging.info("main() iniciada")
     page.title = "RecoverFit"
     page.bgcolor = THEME_BG
     page.padding = 20
     page.theme_mode = ft.ThemeMode.DARK
-    logging.info("page config aplicada")
 
     def build_layout():
 
@@ -127,17 +116,11 @@ def main(page: ft.Page):
 
     try:
         layout = build_layout()
-        logging.info("build_layout OK")
         page.add(layout)
-        logging.info("page.add OK")
     except Exception as ex:
-        logging.error("Error al iniciar (build_layout):\n%s", traceback.format_exc())
+        logging.error("Error al iniciar (build_layout)", exc_info=True)
         page.add(ft.Text(f"Error al iniciar: {ex}", color=ft.Colors.RED))
 
 
 if __name__ == "__main__":
-    try:
-        ft.run(main)
-    except Exception:
-        logging.error("ERROR en ft.run:\n%s", traceback.format_exc())
-        raise
+    ft.run(main)
