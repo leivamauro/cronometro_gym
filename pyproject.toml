@@ -5,30 +5,27 @@ description = ""
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [
-    { name = "Flet developer", email = "you@example.com" }
+    { name = "mauro_dev" }
 ]
 dependencies = [
-    "flet>=0.85.2",
+    "flet==0.85.2",
     "SQLAlchemy",
     "python-dateutil",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "flet-cli>=0.85.2",
-    "flet-desktop>=0.85.2",
-    "flet-web>=0.85.2",
+    "flet-cli==0.85.2",
+    "flet-desktop==0.85.2",
+    "flet-web==0.85.2",
     
 ]
 
 [tool.flet]
-org = "com.mycompany"
-product = "gestion-pagos"
+org = "com.recoverfit"
+product = "gestion RecoverFit"
 company = "Flet"
-copyright = "Copyright (C) 2023-2026 by Flet"
-# opcion especial para linux
-# tipos ligth (es nativa de linux no soporta audios y videos) y full si soporta audios y videos
-desktop_flavor = "light"
+copyright = "Copyright (C) 2023-2026"
 assets_dir = "src/assets"
 
 [tool.flet.app]

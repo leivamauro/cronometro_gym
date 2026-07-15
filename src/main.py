@@ -1,13 +1,40 @@
 # python
-import flet as ft
-# locales
-from constants import *
-from controls.member_card import MemberCard
-from controls.header import Header
-from components.modal_conf import crear_modal_conf
-from components.modal_nuevo_miembro import crear_modal_nuevo_miembro
-from database_orm import Miembro, session as db_session
-from database_orm import _estado_semaforo, _generar_status_text
+import os
+import sys
+import traceback
+import logging
+from pathlib import Path
+
+_log_dir = Path(os.environ.get("FLET_APP_STORAGE_DATA") or (Path.home() / "gestion_pagos_logs"))
+try:
+    _log_dir.mkdir(parents=True, exist_ok=True)
+except Exception:
+    _log_dir = Path.home()
+logging.basicConfig(
+    filename=str(_log_dir / "gestion_pagos_diag.log"),
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s %(message)s",
+)
+logging.getLogger().addHandler(logging.StreamHandler(sys.stderr))
+logging.info("=== Inicio de la aplicacion (diagnostico) ===")
+logging.info("FLET_APP_STORAGE_DATA=%s", os.environ.get("FLET_APP_STORAGE_DATA"))
+logging.info("FLET_ASSETS_DIR=%s", os.environ.get("FLET_ASSETS_DIR"))
+logging.info("sys.executable=%s", sys.executable)
+logging.info("cwd=%s", os.getcwd())
+
+try:
+    import flet as ft
+    from constants import *
+    from controls.member_card import MemberCard
+    from controls.header import Header
+    from components.modal_conf import crear_modal_conf
+    from components.modal_nuevo_miembro import crear_modal_nuevo_miembro
+    from database_orm import Miembro, session as db_session
+    from database_orm import _estado_semaforo, _generar_status_text
+    logging.info("Imports completados OK")
+except Exception:
+    logging.error("ERROR en imports:\n%s", traceback.format_exc())
+    raise
 
 
 def abrir_conf(page):
@@ -16,10 +43,12 @@ def abrir_conf(page):
 
 
 def main(page: ft.Page):
+    logging.info("main() iniciada")
     page.title = "RecoverFit"
     page.bgcolor = THEME_BG
     page.padding = 20
     page.theme_mode = ft.ThemeMode.DARK
+    logging.info("page config aplicada")
 
     def build_layout():
 
@@ -98,10 +127,17 @@ def main(page: ft.Page):
 
     try:
         layout = build_layout()
+        logging.info("build_layout OK")
         page.add(layout)
+        logging.info("page.add OK")
     except Exception as ex:
+        logging.error("Error al iniciar (build_layout):\n%s", traceback.format_exc())
         page.add(ft.Text(f"Error al iniciar: {ex}", color=ft.Colors.RED))
 
 
 if __name__ == "__main__":
-    ft.app(main, assets_dir="src/assets")
+    try:
+        ft.run(main)
+    except Exception:
+        logging.error("ERROR en ft.run:\n%s", traceback.format_exc())
+        raise
