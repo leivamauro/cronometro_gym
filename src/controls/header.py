@@ -14,7 +14,7 @@ class Header(ft.Container):
             controls=[
                 ft.Container(
                     content=ft.Image(
-                        src="src/assets/icon.png",
+                        src="icon.png",
                         width=50,
                         height=50,
                         fit="cover",

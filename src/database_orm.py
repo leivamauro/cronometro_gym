@@ -23,7 +23,7 @@ from sqlalchemy import (
 #locales
 
 #conxion a la base de datos
-engine = create_engine("sqlite:///storage/data/gestion_pagos.db", echo=True)
+engine = create_engine("sqlite:///storage/data/gestion_pagos.db", echo=False)
 
 # relacion entre la conexion y los modelos
 SessionLocal = sessionmaker(engine)

@@ -20,8 +20,6 @@ def main(page: ft.Page):
     page.bgcolor = THEME_BG
     page.padding = 20
     page.theme_mode = ft.ThemeMode.DARK
-    page.assets_dir = "src/assets"
-    # para que funcione el modo responsive la pantalla debe ser menor a 600 px de ancho
 
     def build_layout():
 
@@ -98,9 +96,12 @@ def main(page: ft.Page):
         modal = crear_modal_nuevo_miembro(page, db_session, on_guardar=reconstruir)
         page.show_dialog(modal)
 
-    layout = build_layout()
-    page.add(layout)
+    try:
+        layout = build_layout()
+        page.add(layout)
+    except Exception as ex:
+        page.add(ft.Text(f"Error al iniciar: {ex}", color=ft.Colors.RED))
 
 
 if __name__ == "__main__":
-    ft.run(main)
+    ft.app(main, assets_dir="src/assets")
