@@ -24,7 +24,7 @@ from controls.member_card import MemberCard
 from controls.header import Header
 from components.modal_conf import crear_modal_conf
 from components.modal_nuevo_miembro import crear_modal_nuevo_miembro
-from database_orm import Miembro, session as db_session
+from database_orm import Miembro, Cronograma, session as db_session
 from database_orm import _estado_semaforo, _generar_status_text
 
 
@@ -68,6 +68,7 @@ def main(page: ft.Page):
                     payment_due=payment_due,
                     miembro_id=m.id,
                     on_guardar=reconstruir,
+                    has_routine=db_session.query(Cronograma).filter_by(miembro_id=m.id).count() > 0,
                 )
             )
 

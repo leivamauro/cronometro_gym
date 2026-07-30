@@ -68,6 +68,20 @@ class HistorialPago(Base):
         return f"Pago de {self.monto} el {self.fecha_pago} por {self.meses_abonados} meses"
 
 
+class Cronograma(Base):
+    __tablename__ = "cronogramas"
+
+    id = Column(Integer(), primary_key=True, autoincrement=True)
+    miembro_id = Column(Integer(), ForeignKey("miembros.id"))
+    dia_semana = Column(Integer(), nullable=False)
+    fecha = Column(DateTime(), nullable=True)
+    descripcion = Column(String(200), nullable=True)
+    repetir_semanal = Column(Boolean(), default=True)
+
+    def __str__(self):
+        return f"Día {self.dia_semana}: {self.descripcion}"
+
+
 # =============================================================================
 # FUNCIONES DE UTILIDAD
 # =============================================================================

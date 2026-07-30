@@ -5,11 +5,12 @@ from constants import *
 from components.modal_pago import crear_modal_pago
 from components.modal_detalle import crear_modal_detalles
 from components.modal_confirmacion import crear_modal_confirmacion
+from components.modal_rutina import crear_modal_rutina
 from database_orm import session as db_session
 
 class MemberCard(ft.Container):
 
-    def __init__(self, page: ft.Page, name: str = "", status_text: str = "", status_color: str = "", payment_due: bool = False, miembro_id: int = 0, on_guardar=None):
+    def __init__(self, page: ft.Page, name: str = "", status_text: str = "", status_color: str = "", payment_due: bool = False, miembro_id: int = 0, on_guardar=None, has_routine: bool = False):
         super().__init__()
         self.expand = True
         self.name = name
@@ -18,6 +19,7 @@ class MemberCard(ft.Container):
         self.payment_due = payment_due
         self.miembro_id = miembro_id
         self.on_guardar = on_guardar
+        self.has_routine = has_routine
         self.page_ = page
 
         # Configuración del contenedor de la tarjeta
@@ -34,6 +36,14 @@ class MemberCard(ft.Container):
         else:
             pagar_button_bgcolor = THEME_GREY_BUTTON_BG
             pagar_button_color = THEME_GREY_BUTTON_TEXT
+
+        # Determinar colores del botón "RUTINA" según si tiene rutinas
+        if self.has_routine:
+            rutina_button_bgcolor = THEME_TEAL
+            rutina_button_color = THEME_TEAL_TEXT
+        else:
+            rutina_button_bgcolor = THEME_GREY_BUTTON_BG
+            rutina_button_color = THEME_GREY_BUTTON_TEXT
 
         # Semáforo de estado (Círculo de color)
         traffic_light = ft.Container(
@@ -63,6 +73,13 @@ class MemberCard(ft.Container):
             color=pagar_button_color,
             style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
             on_click=lambda e: self._open_modal_pago(e),
+        )
+        rutina_button = ft.FilledButton(
+            content=ft.Text(value="RUTINA"),
+            bgcolor=rutina_button_bgcolor,
+            color=rutina_button_color,
+            style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
+            on_click=lambda e: self._open_modal_rutina(e),
         )
         detalles_button = ft.FilledButton(
             content=ft.Text(value="DETALLES"),
@@ -107,7 +124,7 @@ class MemberCard(ft.Container):
                 ft.ResponsiveRow(
                     controls=[
                         ft.Row(
-                            controls=[pagar_button, detalles_button, delete_button],
+                            controls=[pagar_button, rutina_button, detalles_button, delete_button],
                             alignment=ft.MainAxisAlignment.CENTER,
                         ),
                     ],
@@ -126,6 +143,10 @@ class MemberCard(ft.Container):
 
     def _open_modal_pago(self, e):
         modal = crear_modal_pago(self.name, self.page_, db_session, self.miembro_id, on_guardar=self.on_guardar)
+        self.page_.show_dialog(modal)
+
+    def _open_modal_rutina(self, e):
+        modal = crear_modal_rutina(self.name, self.page_, db_session, self.miembro_id, on_guardar=self.on_guardar)
         self.page_.show_dialog(modal)
 
     def _confirmar_eliminar(self, e):
