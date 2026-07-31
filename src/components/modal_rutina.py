@@ -1,10 +1,12 @@
 # python
 import os
+import io
 import openpyxl
 from datetime import datetime
 from pathlib import Path
 from openpyxl.styles import Font, PatternFill, Alignment as XlAlignment, Border, Side
 import flet as ft
+from flet import FilePicker, FilePickerFileType
 from constants import *
 from database_orm import Cronograma
 
@@ -212,12 +214,14 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
             on_guardar()
 
     # ── Generar Excel ──────────────────────────────────────────
-    def _generar_excel(e):
+    async def _generar_excel(e):
         rutinas = _cargar_rutinas()
         if not rutinas:
-            page.show_snack_bar(
-                ft.SnackBar(content=ft.Text("No hay rutinas registradas"), duration=2500)
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("No hay rutinas registradas"), duration=2500
             )
+            page.snack_bar.open = True
+            page.update()
             return
 
         rutinas_dict = {}
@@ -276,25 +280,57 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         for col_letter in ['B', 'C', 'D', 'E', 'F', 'G', 'H']:
             ws.column_dimensions[col_letter].width = 20
 
-        export_dir = Path("storage") / "exports"
-        export_dir.mkdir(parents=True, exist_ok=True)
-        fecha_str = datetime.now().strftime("%Y%m%d_%H%M%S")
-        nombre_archivo = f"Rutina_{nombre_miembro.replace(' ', '_')}_{fecha_str}.xlsx"
-        ruta = str(export_dir / nombre_archivo)
-        wb.save(ruta)
+        buffer = io.BytesIO()
+        wb.save(buffer)
+        excel_bytes = buffer.getvalue()
 
-        def _abrir_excel(e):
-            os.startfile(ruta)
+        name_clean = nombre_miembro.replace(' ', '_')
+        name_clean = "".join(c for c in name_clean if c.isalnum() or c in ('_', '-'))
+        fecha_str = datetime.now().strftime("%Y%m%d")
+        nombre_archivo = f"Rutina_{name_clean}_{fecha_str}.xlsx"
 
-        page.show_snack_bar(
-            ft.SnackBar(
-                content=ft.Text(f"Exportado: {nombre_archivo}"),
+        picker = FilePicker()
+        es_mobile = page.platform is not None and page.platform.is_mobile()
+
+        if page.web or es_mobile:
+            ruta = await picker.save_file(
+                dialog_title="Guardar Excel de Rutina",
+                file_name=nombre_archivo,
+                file_type=FilePickerFileType.CUSTOM,
+                allowed_extensions=["xlsx"],
+                src_bytes=excel_bytes,
+            )
+        else:
+            ruta = await picker.save_file(
+                dialog_title="Guardar Excel de Rutina",
+                file_name=nombre_archivo,
+                file_type=FilePickerFileType.CUSTOM,
+                allowed_extensions=["xlsx"],
+            )
+            if ruta:
+                Path(ruta).write_bytes(excel_bytes)
+
+        if not ruta:
+            return
+
+        if page.web or es_mobile:
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Guardado: {nombre_archivo}"), duration=3000
+            )
+            page.snack_bar.open = True
+            page.update()
+        else:
+            def _abrir_excel(e):
+                os.startfile(ruta)
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text(f"Guardado: {Path(ruta).name}"),
                 action="Abrir archivo",
                 action_color=THEME_TEAL,
                 on_action=_abrir_excel,
-                duration=4000,
+                duration=5000,
             )
-        )
+            page.snack_bar.open = True
+            page.update()
 
     cancelar_btn = ft.OutlinedButton(
         content=ft.Text("Cancelar"),
