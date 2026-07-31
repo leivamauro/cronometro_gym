@@ -289,6 +289,7 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         multiline=True,
         min_lines=1,
         max_lines=3,
+        expand=True,
     )
 
     # ── Checkbox ─────────────────────────────────────────────────
@@ -362,6 +363,7 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
 
     # ── Construir bloques ────────────────────────────────────────
     _construir_calendario()
+    rutinas_lista.content = _construir_lista_rutinas()
 
     bloque_calendario = ft.Container(
         content=cal_container,
@@ -370,8 +372,7 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         border_radius=12,
     )
 
-    rutinas_lista.content = _construir_lista_rutinas()
-    bloque_rutinas = ft.Container(
+    bloque_central = ft.Container(
         content=ft.Column(
             controls=[
                 ft.Text(
@@ -379,62 +380,39 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
                     color=THEME_TEXT_PRIMARY,
                 ),
                 rutinas_lista,
+                ft.Container(
+                    content=ft.Column(
+                        controls=[descripcion_field, repetir_check],
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                        spacing=8,
+                    ),
+                    alignment=ft.Alignment.CENTER,
+                    expand=True,
+                ),
             ],
             spacing=8,
         ),
     )
 
-    bloque_form = ft.Container(
-        content=ft.Column(
-            controls=[
-                descripcion_field,
-                repetir_check,
-                ft.Container(height=6),
-                ft.Row(
-                    controls=[guardar_btn, cancelar_btn],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    spacing=10,
-                ),
-            ],
-            spacing=8,
-            expand=True,
+    bloque_botones = ft.Container(
+        content=ft.Row(
+            controls=[guardar_btn, cancelar_btn],
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=10,
         ),
-    )
-
-    # ── Layout responsive ────────────────────────────────────────
-    cuerpo = ft.ResponsiveRow(
-        controls=[
-            ft.Container(
-                content=bloque_calendario,
-                col={
-                    ft.ResponsiveRowBreakpoint.XS: 12,
-                    ft.ResponsiveRowBreakpoint.MD: 7,
-                    ft.ResponsiveRowBreakpoint.LG: 7,
-                },
-            ),
-            ft.Container(
-                content=ft.Column(
-                    [
-                        bloque_rutinas,
-                        ft.Divider(color=THEME_BORDER_COLOR, height=1),
-                        bloque_form,
-                    ],
-                    spacing=10,
-                ),
-                col={
-                    ft.ResponsiveRowBreakpoint.XS: 12,
-                    ft.ResponsiveRowBreakpoint.MD: 5,
-                    ft.ResponsiveRowBreakpoint.LG: 5,
-                },
-            ),
-        ],
-        spacing=14,
+        padding=ft.Padding.only(top=4),
     )
 
     contenido_principal = ft.Column(
         controls=[
             header,
-            ft.Container(content=cuerpo, padding=ft.Padding(16, 12, 16, 16)),
+            ft.Container(
+                content=ft.Column(
+                    controls=[bloque_calendario, bloque_central, bloque_botones],
+                    spacing=12,
+                ),
+                padding=ft.Padding(16, 12, 16, 16),
+            ),
         ],
         spacing=0,
         scroll=ft.ScrollMode.AUTO,
@@ -449,7 +427,6 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         content=ft.Container(
             content=contenido_principal,
             width=ancho_modal,
-            height=page.height * 0.82 if is_mobile and page.height else None,
         ),
         content_padding=ft.Padding.all(0),
     )

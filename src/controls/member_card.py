@@ -43,7 +43,7 @@ class MemberCard(ft.Container):
             rutina_button_color = THEME_TEAL_TEXT
         else:
             rutina_button_bgcolor = THEME_GREY_BUTTON_BG
-            rutina_button_color = THEME_GREY_BUTTON_TEXT
+            rutina_button_color = THEME_TEXT_PRIMARY
 
         # Semáforo de estado (Círculo de color)
         traffic_light = ft.Container(

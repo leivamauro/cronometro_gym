@@ -1,0 +1,19 @@
+
+NUEVO:
+ -> nuevo botón rutina: para cada fila de cada miembro, podrán cargar las rutunas personales de cada uno.
+	|-> hacer una especie de cronograma con los 7 días de las semana, cada dia tiene un texto 
+	|-> datos: Descripción - texto
+
+ -> nuevo botón imprimir (en el detalle): deberá imprimir el pago del miembro, cuando vence y cuando es el próximo pago:
+	|-> datos (tabla): nombre y apellido, fecha de registro, fecha de pago, fecha de vencimiento.
+	|-> información extra (debajo de la tabla): estado (al dia, adeuda), días a vencer (verde) o días vencido (rojo).
+
+
+FIX's:
+ -> corregir historial: aparecen el historial de todos juntos, en lugar de aparecer únicamente el historial del miembro seleccionado.
+
+
+
+
+Nuevo programa:
+crear un programa nuevo que muestre hora, minuto y segundo. con el logo del gimnacio. para tomarr tiempos, que tenga una alarma (que se pueda mutear).
