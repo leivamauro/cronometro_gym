@@ -1,4 +1,9 @@
 # python
+import os
+import openpyxl
+from datetime import datetime
+from pathlib import Path
+from openpyxl.styles import Font, PatternFill, Alignment as XlAlignment, Border, Side
 import flet as ft
 from constants import *
 from database_orm import Cronograma
@@ -206,6 +211,91 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         if on_guardar:
             on_guardar()
 
+    # ── Generar Excel ──────────────────────────────────────────
+    def _generar_excel(e):
+        rutinas = _cargar_rutinas()
+        if not rutinas:
+            page.show_snack_bar(
+                ft.SnackBar(content=ft.Text("No hay rutinas registradas"), duration=2500)
+            )
+            return
+
+        rutinas_dict = {}
+        for r in rutinas:
+            if r.repetir_semanal:
+                rutinas_dict[r.dia_semana] = r.descripcion or ""
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Rutina"
+
+        dias = ["Semana", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+
+        header_fill = PatternFill(start_color="1B6CA8", end_color="1B6CA8", fill_type="solid")
+        header_font = Font(color="FFFFFF", bold=True, size=11)
+        thin_border = Border(
+            left=Side(style='thin', color='000000'),
+            right=Side(style='thin', color='000000'),
+            top=Side(style='thin', color='000000'),
+            bottom=Side(style='thin', color='000000'),
+        )
+        center_align = XlAlignment(horizontal='center', vertical='center', wrap_text=True)
+
+        for col_idx, name in enumerate(dias, 1):
+            cell = ws.cell(row=1, column=col_idx, value=name)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = center_align
+            cell.border = thin_border
+
+        colores_semana = [
+            "7ED7F1",
+            "A8E663",
+            "FFB347",
+            "FFE066",
+        ]
+
+        cuerpo_font = Font(color="000000", size=11)
+
+        for semana in range(4):
+            fill = PatternFill(start_color=colores_semana[semana], end_color=colores_semana[semana], fill_type="solid")
+            row_num = semana + 2
+            ws.cell(row=row_num, column=1, value=f"Semana {semana + 1}").fill = fill
+            ws.cell(row=row_num, column=1).font = cuerpo_font
+            ws.cell(row=row_num, column=1).alignment = center_align
+            ws.cell(row=row_num, column=1).border = thin_border
+            for dia_idx in range(7):
+                desc = rutinas_dict.get(dia_idx, "")
+                cell = ws.cell(row=row_num, column=dia_idx + 2, value=desc)
+                cell.fill = fill
+                cell.font = cuerpo_font
+                cell.alignment = center_align
+                cell.border = thin_border
+
+        ws.column_dimensions['A'].width = 12
+        for col_letter in ['B', 'C', 'D', 'E', 'F', 'G', 'H']:
+            ws.column_dimensions[col_letter].width = 20
+
+        export_dir = Path("storage") / "exports"
+        export_dir.mkdir(parents=True, exist_ok=True)
+        fecha_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+        nombre_archivo = f"Rutina_{nombre_miembro.replace(' ', '_')}_{fecha_str}.xlsx"
+        ruta = str(export_dir / nombre_archivo)
+        wb.save(ruta)
+
+        def _abrir_excel(e):
+            os.startfile(ruta)
+
+        page.show_snack_bar(
+            ft.SnackBar(
+                content=ft.Text(f"Exportado: {nombre_archivo}"),
+                action="Abrir archivo",
+                action_color=THEME_TEAL,
+                on_action=_abrir_excel,
+                duration=4000,
+            )
+        )
+
     cancelar_btn = ft.OutlinedButton(
         content=ft.Text("Cancelar"),
         style=ft.ButtonStyle(
@@ -222,6 +312,20 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         color=THEME_TEAL_TEXT,
         style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
         on_click=_guardar,
+    )
+
+    excel_btn = ft.OutlinedButton(
+        content=ft.Row(
+            controls=[ft.Icon(ft.Icons.TABLE_VIEW, size=16, color=THEME_TEAL), ft.Text("Excel")],
+            spacing=4,
+            alignment=ft.MainAxisAlignment.CENTER,
+        ),
+        style=ft.ButtonStyle(
+            color=THEME_TEAL,
+            side=ft.BorderSide(1, THEME_TEAL),
+            mouse_cursor=ft.MouseCursor.CLICK,
+        ),
+        on_click=_generar_excel,
     )
 
     # ── Construir bloques ────────────────────────────────────────
@@ -255,7 +359,7 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
 
     bloque_botones = ft.Container(
         content=ft.Row(
-            controls=[guardar_btn, cancelar_btn],
+            controls=[excel_btn, guardar_btn, cancelar_btn],
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=10,
         ),
