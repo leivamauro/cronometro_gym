@@ -1,29 +1,23 @@
 # python
 import flet as ft
-import calendar as cal
-from datetime import date, datetime
 from constants import *
 from database_orm import Cronograma
 
 DIAS_CORTOS = ["Lun", "mar", "mie", "jue", "vie", "sab", "dom"]
 DIAS_COMPLETOS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
-MESES = [
-    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-    "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
-]
 
 
 def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: int, on_guardar=None):
     is_mobile = page.width is not None and page.width < 600
-    today = date.today()
+
+    # ── Limpiar rutinas de fecha única existentes ──────────────
+    session.query(Cronograma).filter_by(miembro_id=miembro_id, repetir_semanal=False).delete()
+    session.commit()
 
     # ── Estado mutable ──────────────────────────────────────────
     state = {
-        "year": today.year,
-        "month": today.month,
-        "selected_dates": set(),
+        "selected_weekdays": set(),
         "existing_weekdays": set(),
-        "existing_dates": set(),
     }
 
     # ── Helpers de BD ───────────────────────────────────────────
@@ -33,8 +27,6 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
     for r in _cargar_rutinas():
         if r.repetir_semanal:
             state["existing_weekdays"].add(r.dia_semana)
-        elif r.fecha is not None:
-            state["existing_dates"].add(r.fecha.date() if isinstance(r.fecha, datetime) else r.fecha)
 
     # ── Header ───────────────────────────────────────────────────
     header = ft.Container(
@@ -51,164 +43,68 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
     )
 
     # ── Contenedores mutables ───────────────────────────────────
-    cal_container = ft.Container(expand=True)
+    dias_container = ft.Container(expand=True)
     rutinas_lista = ft.Container()
 
-    # ── Construir calendario ────────────────────────────────────
-    def _construir_calendario():
-        year = state["year"]
-        month = state["month"]
-        selected = state["selected_dates"]
+    # ── Construir selector de 7 días ───────────────────────────
+    def _construir_dias():
+        selected = state["selected_weekdays"]
         existing_wd = state["existing_weekdays"]
-        existing_dt = state["existing_dates"]
 
-        first_wd, num_days = cal.monthrange(year, month)
+        buttons = []
+        for i, nombre in enumerate(DIAS_CORTOS):
+            is_selected = i in selected
+            has_routine = i in existing_wd
 
-        prev_btn = ft.IconButton(
-            icon=ft.Icons.CHEVRON_LEFT,
-            icon_color=THEME_TEXT_PRIMARY,
-            icon_size=18,
-            on_click=lambda e: _cambiar_mes(-1),
-        )
-        next_btn = ft.IconButton(
-            icon=ft.Icons.CHEVRON_RIGHT,
-            icon_color=THEME_TEXT_PRIMARY,
-            icon_size=18,
-            on_click=lambda e: _cambiar_mes(1),
-        )
-        nav_row = ft.Row(
-            controls=[
-                prev_btn,
-                ft.Text(
-                    f"{MESES[month - 1]} {year}",
-                    color=THEME_TEXT_PRIMARY,
-                    size=15,
-                    weight="bold",
-                ),
-                next_btn,
-            ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-        )
+            if is_selected:
+                bg = THEME_TEAL
+                txt_color = THEME_TEAL_TEXT
+                borde = None
+            elif has_routine:
+                bg = THEME_CARD_BG
+                txt_color = THEME_TEAL
+                borde = ft.Border(
+                    top=ft.BorderSide(2, THEME_TEAL),
+                    bottom=ft.BorderSide(2, THEME_TEAL),
+                    left=ft.BorderSide(2, THEME_TEAL),
+                    right=ft.BorderSide(2, THEME_TEAL),
+                )
+            else:
+                bg = "#3A3D42"
+                txt_color = THEME_TEXT_PRIMARY
+                borde = None
 
-        cabecera = ft.Row(
-            controls=[
+            buttons.append(
                 ft.Container(
                     content=ft.Text(
-                        d, color=THEME_TEXT_SECONDARY, size=11,
+                        nombre,
+                        color=txt_color,
+                        size=12,
+                        weight="bold",
                         text_align=ft.TextAlign.CENTER,
                     ),
                     expand=True,
+                    height=40,
+                    border_radius=8,
+                    bgcolor=bg,
+                    border=borde,
                     alignment=ft.Alignment.CENTER,
-                )
-                for d in DIAS_CORTOS
-            ],
-        )
-
-        cells = []
-        for _ in range(first_wd):
-            cells.append(None)
-        for day in range(1, num_days + 1):
-            cells.append(day)
-        while len(cells) % 7 != 0:
-            cells.append(None)
-
-        rows = [cells[i:i + 7] for i in range(0, len(cells), 7)]
-
-        cell_size = 34 if is_mobile else 38
-
-        grid_rows = []
-        for week in rows:
-            week_cells = []
-            for day_num in week:
-                if day_num is None:
-                    week_cells.append(
-                        ft.Container(width=cell_size, height=cell_size)
-                    )
-                    continue
-
-                d = date(year, month, day_num)
-                wd = d.weekday()
-
-                is_selected = d in selected
-                has_routine = wd in existing_wd or d in existing_dt
-                is_today_val = d == today
-
-                if is_selected:
-                    bg = THEME_TEAL
-                    txt_color = THEME_TEAL_TEXT
-                    borde = None
-                elif has_routine:
-                    bg = THEME_CARD_BG
-                    txt_color = THEME_TEAL
-                    borde = ft.Border(
-                        top=ft.BorderSide(2, THEME_TEAL),
-                        bottom=ft.BorderSide(2, THEME_TEAL),
-                        left=ft.BorderSide(2, THEME_TEAL),
-                        right=ft.BorderSide(2, THEME_TEAL),
-                    )
-                else:
-                    bg = "#3A3D42"
-                    txt_color = THEME_TEXT_PRIMARY
-                    borde = None
-
-                text_weight = "bold" if is_today_val else "normal"
-
-                def _make_click(date_obj):
-                    return lambda e: _toggle_day(date_obj)
-
-                week_cells.append(
-                    ft.Container(
-                        content=ft.Text(
-                            str(day_num),
-                            color=txt_color,
-                            size=12,
-                            weight=text_weight,
-                            text_align=ft.TextAlign.CENTER,
-                        ),
-                        width=cell_size,
-                        height=cell_size,
-                        border_radius=6,
-                        bgcolor=bg,
-                        border=borde,
-                        alignment=ft.Alignment.CENTER,
-                        on_click=_make_click(d),
-                    )
-                )
-            grid_rows.append(
-                ft.Row(
-                    controls=week_cells,
-                    alignment=ft.MainAxisAlignment.SPACE_AROUND,
-                    spacing=0,
+                    on_click=lambda e, wd=i: _toggle_weekday(wd),
                 )
             )
 
-        cal_container.content = ft.Column(
-            controls=[nav_row, cabecera] + grid_rows,
-            spacing=4,
-            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+        dias_container.content = ft.Row(
+            controls=buttons,
+            spacing=6,
+            alignment=ft.MainAxisAlignment.CENTER,
         )
 
-    def _cambiar_mes(delta):
-        new_month = state["month"] + delta
-        new_year = state["year"]
-        if new_month > 12:
-            new_month = 1
-            new_year += 1
-        elif new_month < 1:
-            new_month = 12
-            new_year -= 1
-        state["year"] = new_year
-        state["month"] = new_month
-        state["selected_dates"].clear()
-        _construir_calendario()
-        page.update()
-
-    def _toggle_day(d):
-        if d in state["selected_dates"]:
-            state["selected_dates"].remove(d)
+    def _toggle_weekday(wd):
+        if wd in state["selected_weekdays"]:
+            state["selected_weekdays"].remove(wd)
         else:
-            state["selected_dates"].add(d)
-        _construir_calendario()
+            state["selected_weekdays"].add(wd)
+        _construir_dias()
         page.update()
 
     # ── Lista de rutinas existentes ──────────────────────────────
@@ -230,13 +126,7 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
 
         items = []
         for r in rutinas:
-            if r.repetir_semanal:
-                dia_nombre = DIAS_COMPLETOS[r.dia_semana]
-            elif r.fecha is not None:
-                fecha_obj = r.fecha.date() if isinstance(r.fecha, datetime) else r.fecha
-                dia_nombre = fecha_obj.strftime("%d %b %Y")
-            else:
-                dia_nombre = DIAS_COMPLETOS[r.dia_semana]
+            dia_nombre = DIAS_COMPLETOS[r.dia_semana]
             desc = r.descripcion or "—"
             items.append(
                 ft.Container(
@@ -268,14 +158,11 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
 
     def _actualizar_rutinas():
         state["existing_weekdays"].clear()
-        state["existing_dates"].clear()
         for r in _cargar_rutinas():
             if r.repetir_semanal:
                 state["existing_weekdays"].add(r.dia_semana)
-            elif r.fecha is not None:
-                state["existing_dates"].add(r.fecha.date() if isinstance(r.fecha, datetime) else r.fecha)
         rutinas_lista.content = _construir_lista_rutinas()
-        _construir_calendario()
+        _construir_dias()
 
     # ── Descripción ──────────────────────────────────────────────
     descripcion_field = ft.TextField(
@@ -292,15 +179,6 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         expand=True,
     )
 
-    # ── Checkbox ─────────────────────────────────────────────────
-    repetir_check = ft.Checkbox(
-        label="Repetir semanalmente",
-        value=True,
-        fill_color=THEME_TEAL,
-        check_color=THEME_TEAL_TEXT,
-        label_style=ft.TextStyle(color=THEME_TEXT_PRIMARY, size=13),
-    )
-
     # ── Cerrar ───────────────────────────────────────────────────
     def cerrar_modal(e=None):
         modal_rutina.open = False
@@ -308,36 +186,21 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
 
     # ── Guardar ──────────────────────────────────────────────────
     def _guardar(e):
-        if not state["selected_dates"]:
+        if not state["selected_weekdays"]:
             return
         descripcion = (descripcion_field.value or "").strip()
-        repetir = repetir_check.value
 
-        for d in state["selected_dates"]:
-            dia_semana = d.weekday()
-            if repetir:
-                existente = session.query(Cronograma).filter_by(
-                    miembro_id=miembro_id, dia_semana=dia_semana, repetir_semanal=True,
-                ).first()
-                if existente:
-                    existente.descripcion = descripcion
-                else:
-                    session.add(Cronograma(
-                        miembro_id=miembro_id, dia_semana=dia_semana,
-                        descripcion=descripcion, repetir_semanal=True,
-                    ))
+        for wd in state["selected_weekdays"]:
+            existente = session.query(Cronograma).filter_by(
+                miembro_id=miembro_id, dia_semana=wd, repetir_semanal=True,
+            ).first()
+            if existente:
+                existente.descripcion = descripcion
             else:
-                fecha_dt = datetime.combine(d, datetime.min.time())
-                existente = session.query(Cronograma).filter_by(
-                    miembro_id=miembro_id, fecha=fecha_dt, repetir_semanal=False,
-                ).first()
-                if existente:
-                    existente.descripcion = descripcion
-                else:
-                    session.add(Cronograma(
-                        miembro_id=miembro_id, dia_semana=dia_semana,
-                        fecha=fecha_dt, descripcion=descripcion, repetir_semanal=False,
-                    ))
+                session.add(Cronograma(
+                    miembro_id=miembro_id, dia_semana=wd,
+                    descripcion=descripcion, repetir_semanal=True,
+                ))
         session.commit()
         cerrar_modal()
         if on_guardar:
@@ -362,11 +225,11 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
     )
 
     # ── Construir bloques ────────────────────────────────────────
-    _construir_calendario()
+    _construir_dias()
     rutinas_lista.content = _construir_lista_rutinas()
 
     bloque_calendario = ft.Container(
-        content=cal_container,
+        content=dias_container,
         padding=ft.Padding(12, 8, 12, 8),
         bgcolor=THEME_CARD_BG,
         border_radius=12,
@@ -381,11 +244,7 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
                 ),
                 rutinas_lista,
                 ft.Container(
-                    content=ft.Column(
-                        controls=[descripcion_field, repetir_check],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        spacing=8,
-                    ),
+                    content=descripcion_field,
                     alignment=ft.Alignment.CENTER,
                     expand=True,
                 ),
