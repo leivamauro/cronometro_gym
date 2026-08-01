@@ -30,8 +30,9 @@ async def main(page: ft.Page):
     page.padding = 0
     page.window.width = 520
     page.window.height = 900
-    page.window.min_width = 400
+    page.window.min_width = 320
     page.window.min_height = 720
+    is_mobile = page.platform == ft.PagePlatform.ANDROID
     try:
         await page.window.center()
     except Exception:
@@ -61,7 +62,7 @@ async def main(page: ft.Page):
     }
 
     # ── Build components ───────────────────────────────────────────
-    header = create_header_logo()
+    header, header_refs = create_header_logo()
 
     display, drefs = create_stopwatch_display(on_click=lambda: _open_modal())
 
@@ -83,6 +84,7 @@ async def main(page: ft.Page):
         on_sound_toggle=lambda: _handle_sound_toggle(),
         on_laps_toggle=lambda: _handle_laps_toggle(),
         on_fullscreen=lambda: _toggle_fullscreen(),
+        is_mobile=is_mobile,
     )
 
     # ── Swap clock / stopwatch display ─────────────────────────────
@@ -417,8 +419,9 @@ async def main(page: ft.Page):
     # ── Responsive box sizing ──────────────────────────────────────
     def _update_box_sizes():
         win_w = page.window.width
-        available = win_w - 32
-        box_size = min(max(90, (available - 24) // 3), 500)
+        margin = 8 if is_mobile else 16
+        available = win_w - (margin * 2)
+        box_size = min(max(70, (available - 16) // 3), 220)
         text_size = int(box_size * 0.55)
         for box in drefs["boxes"]:
             box.width = box_size
@@ -426,7 +429,16 @@ async def main(page: ft.Page):
         for txt in drefs["texts"]:
             txt.size = text_size
 
+        logo_w = min(win_w - 32, 400)
+        clock_w = min(win_w - 32, 400)
+        header_refs["image"].width = logo_w
+        clock_refs["container"].width = clock_w
+
     def _on_resize(e):
+        win_w = page.window.width
+        main_container.width = win_w
+        if is_mobile:
+            main_container.margin = ft.Margin(left=8, top=16, right=8, bottom=16)
         _update_box_sizes()
         page.update()
 

@@ -9,6 +9,7 @@ def create_extra_settings(
     on_sound_toggle: callable,
     on_laps_toggle: callable,
     on_fullscreen: callable,
+    is_mobile: bool = False,
 ) -> tuple:
     """Retorna (control, refs) con referencias a botones dinámicos."""
 
@@ -37,15 +38,13 @@ def create_extra_settings(
     )
     laps_btn.on_click = lambda _: on_laps_toggle()
 
-    sound_icon = [ft.Icons.VOLUME_UP]
-
     def _toggle_sound(e):
         new_sound_on = on_sound_toggle()
         sound_btn.icon = ft.Icons.VOLUME_UP if new_sound_on else ft.Icons.VOLUME_OFF
         sound_btn.update()
 
     sound_btn = ft.IconButton(
-        icon=sound_icon[0], icon_size=13, icon_color="#a1a1a6",
+        icon=ft.Icons.VOLUME_UP, icon_size=13, icon_color="#a1a1a6",
         style=ft.ButtonStyle(
             bgcolor={"": "#1a1f26"},
             side={"": ft.BorderSide(1, "#374151")},
@@ -64,8 +63,14 @@ def create_extra_settings(
         on_click=lambda _: on_fullscreen(),
     )
 
-    control = ft.Container(
-        content=ft.Row(
+    if is_mobile:
+        inner = ft.Row(
+            alignment=ft.MainAxisAlignment.CENTER,
+            spacing=8,
+            controls=[sound_btn, fullscreen_btn],
+        )
+    else:
+        inner = ft.Row(
             alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             controls=[
                 ft.Row(spacing=6, controls=[
@@ -81,7 +86,10 @@ def create_extra_settings(
                     fullscreen_btn,
                 ]),
             ],
-        ),
+        )
+
+    control = ft.Container(
+        content=inner,
         padding=ft.Padding(top=16),
     )
 

@@ -44,27 +44,28 @@ def create_time_select_modal(
         txt = ft.TextField(
             value=str(value_ref[0]).zfill(2),
             text_align=ft.TextAlign.CENTER,
-            text_size=28,
+            text_size=22,
             color=ft.Colors.WHITE,
             bgcolor="#3d4653",
             border=ft.InputBorder.NONE,
             border_radius=12,
-            width=100,
             height=60,
             content_padding=ft.Padding(top=8, bottom=8),
             text_style=ft.TextStyle(font_family=font, weight=ft.FontWeight.BOLD),
             keyboard_type=ft.KeyboardType.NUMBER,
             on_change=lambda e: _handle_input(e, value_ref, min_val, max_val, txt),
+            expand=True,
         )
 
         return ft.Column(
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             spacing=4,
+            expand=True,
             controls=[
                 ft.Text(
                     label,
-                    size=18,
+                    size=16,
                     weight=ft.FontWeight.W_500,
                     color="#e5e7eb",
                     font_family=font,
@@ -100,11 +101,11 @@ def create_time_select_modal(
                     bgcolor="#3d4653",
                     border=border_all(2, border_color),
                     border_radius=12,
-                    padding=ft.Padding(left=8, top=4, right=8, bottom=4),
+                    padding=ft.Padding(left=4, top=4, right=4, bottom=4),
                 ),
                 ft.Text(
                     f"({min_val}-{max_val})",
-                    size=14,
+                    size=12,
                     color="#d1d5db",
                     font_family=font,
                     no_wrap=True,
@@ -132,12 +133,12 @@ def create_time_select_modal(
         content=ft.Column(
             alignment=ft.MainAxisAlignment.CENTER,
             horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-            spacing=24,
+            spacing=16,
             tight=True,
             controls=[
                 ft.Row(
                     alignment=ft.MainAxisAlignment.CENTER,
-                    spacing=12,
+                    spacing=8,
                     controls=[
                         _make_spinner("Horas", hours, 0, 99, True),
                         _make_spinner("Minutos", minutes, 0, 59, False),
@@ -146,12 +147,12 @@ def create_time_select_modal(
                 ),
                 ft.Row(
                     alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                    spacing=16,
+                    spacing=12,
                     controls=[
                         ft.Container(
                             content=ft.Text(
                                 "Aceptar",
-                                size=28,
+                                size=20,
                                 weight=ft.FontWeight.BOLD,
                                 color="#12161b",
                                 font_family=font,
@@ -161,7 +162,7 @@ def create_time_select_modal(
                             bgcolor="#8b99aa",
                             border_radius=16,
                             border=border_all(1, ft.Colors.with_opacity(0.2, ft.Colors.WHITE)),
-                            padding=ft.Padding(left=32, top=14, right=32, bottom=14),
+                            padding=ft.Padding(left=20, top=10, right=20, bottom=10),
                             ink=True,
                             on_click=on_accept_click,
                             expand=True,
@@ -170,7 +171,7 @@ def create_time_select_modal(
                         ft.Container(
                             content=ft.Text(
                                 "Cancelar",
-                                size=28,
+                                size=20,
                                 weight=ft.FontWeight.BOLD,
                                 color="#12161b",
                                 font_family=font,
@@ -180,7 +181,7 @@ def create_time_select_modal(
                             bgcolor="#8b99aa",
                             border_radius=16,
                             border=border_all(1, ft.Colors.with_opacity(0.2, ft.Colors.WHITE)),
-                            padding=ft.Padding(left=32, top=14, right=32, bottom=14),
+                            padding=ft.Padding(left=20, top=10, right=20, bottom=10),
                             ink=True,
                             on_click=lambda _: on_cancel(),
                             expand=True,

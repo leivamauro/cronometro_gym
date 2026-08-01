@@ -67,7 +67,7 @@ def create_stopwatch_display(on_click: callable) -> tuple:
             badge,
             ft.Row(
                 alignment=ft.MainAxisAlignment.CENTER,
-                spacing=12,
+                spacing=8,
                 controls=[box_h, box_m, box_s],
             ),
         ],
