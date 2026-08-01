@@ -1,5 +1,4 @@
 # python
-import os
 import io
 import openpyxl
 from datetime import datetime
@@ -17,14 +16,14 @@ DIAS_COMPLETOS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado
 def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: int, on_guardar=None):
     is_mobile = page.width is not None and page.width < 600
 
-    # ── Limpiar rutinas de fecha única existentes ──────────────
-    session.query(Cronograma).filter_by(miembro_id=miembro_id, repetir_semanal=False).delete()
+    # ── Limpiar rutinas viejas sin semana ──────────────────────
+    session.query(Cronograma).filter_by(miembro_id=miembro_id, semana=None).delete()
     session.commit()
 
     # ── Estado mutable ──────────────────────────────────────────
     state = {
-        "selected_weekdays": set(),
-        "existing_weekdays": set(),
+        "semana_guardada": [set(), set(), set(), set()],
+        "semana_pending": [set(), set(), set(), set()],
     }
 
     # ── Helpers de BD ───────────────────────────────────────────
@@ -32,8 +31,8 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         return session.query(Cronograma).filter_by(miembro_id=miembro_id).all()
 
     for r in _cargar_rutinas():
-        if r.repetir_semanal:
-            state["existing_weekdays"].add(r.dia_semana)
+        if r.repetir_semanal and r.semana is not None:
+            state["semana_guardada"][r.semana - 1].add(r.dia_semana)
 
     # ── Header ───────────────────────────────────────────────────
     header = ft.Container(
@@ -53,64 +52,66 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
     dias_container = ft.Container(expand=True)
     rutinas_lista = ft.Container()
 
-    # ── Construir selector de 7 días ───────────────────────────
+    # ── Construir selector de 4 semanas ────────────────────────
     def _construir_dias():
-        selected = state["selected_weekdays"]
-        existing_wd = state["existing_weekdays"]
+        labels_semana = ["Semana 1", "Semana 2", "Semana 3", "Semana 4"]
 
-        buttons = []
-        for i, nombre in enumerate(DIAS_CORTOS):
-            is_selected = i in selected
-            has_routine = i in existing_wd
+        semana_blocks = []
+        for idx, label in enumerate(labels_semana):
+            guardados = state["semana_guardada"][idx]
+            pending = state["semana_pending"][idx]
+            buttons = []
+            for i, nombre in enumerate(DIAS_CORTOS):
+                es_guardado = i in guardados
+                es_pending = i in pending
 
-            if is_selected:
-                bg = THEME_TEAL
-                txt_color = THEME_TEAL_TEXT
-                borde = None
-            elif has_routine:
-                bg = THEME_CARD_BG
-                txt_color = THEME_TEAL
-                borde = ft.Border(
-                    top=ft.BorderSide(2, THEME_TEAL),
-                    bottom=ft.BorderSide(2, THEME_TEAL),
-                    left=ft.BorderSide(2, THEME_TEAL),
-                    right=ft.BorderSide(2, THEME_TEAL),
+                if es_guardado or es_pending:
+                    bg = THEME_TEAL
+                    txt_color = THEME_TEAL_TEXT
+                else:
+                    bg = "#3A3D42"
+                    txt_color = THEME_TEXT_PRIMARY
+
+                click_fn = None if es_guardado else lambda e, s=idx, wd=i: _toggle_pending(s, wd)
+
+                buttons.append(
+                    ft.Container(
+                        content=ft.Text(
+                            nombre,
+                            color=txt_color,
+                            size=11,
+                            weight="bold",
+                            text_align=ft.TextAlign.CENTER,
+                        ),
+                        expand=True,
+                        height=36,
+                        border_radius=6,
+                        bgcolor=bg,
+                        alignment=ft.Alignment.CENTER,
+                        on_click=click_fn,
+                    )
                 )
-            else:
-                bg = "#3A3D42"
-                txt_color = THEME_TEXT_PRIMARY
-                borde = None
 
-            buttons.append(
-                ft.Container(
-                    content=ft.Text(
-                        nombre,
-                        color=txt_color,
-                        size=12,
-                        weight="bold",
-                        text_align=ft.TextAlign.CENTER,
-                    ),
-                    expand=True,
-                    height=40,
-                    border_radius=8,
-                    bgcolor=bg,
-                    border=borde,
-                    alignment=ft.Alignment.CENTER,
-                    on_click=lambda e, wd=i: _toggle_weekday(wd),
+            semana_blocks.append(
+                ft.Column(
+                    controls=[
+                        ft.Text(label, size=12, weight="bold", color=THEME_TEXT_PRIMARY),
+                        ft.Row(controls=buttons, spacing=4),
+                    ],
+                    spacing=4,
                 )
             )
 
-        dias_container.content = ft.Row(
-            controls=buttons,
-            spacing=6,
-            alignment=ft.MainAxisAlignment.CENTER,
+        dias_container.content = ft.Column(
+            controls=semana_blocks,
+            spacing=10,
         )
 
-    def _toggle_weekday(wd):
-        if wd in state["selected_weekdays"]:
-            state["selected_weekdays"].remove(wd)
+    def _toggle_pending(semana, wd):
+        if wd in state["semana_pending"][semana]:
+            state["semana_pending"][semana].remove(wd)
         else:
-            state["selected_weekdays"].add(wd)
+            state["semana_pending"][semana].add(wd)
         _construir_dias()
         page.update()
 
@@ -134,13 +135,14 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         items = []
         for r in rutinas:
             dia_nombre = DIAS_COMPLETOS[r.dia_semana]
+            semana_str = f" (Semana {r.semana})" if r.semana else ""
             desc = r.descripcion or "—"
             items.append(
                 ft.Container(
                     content=ft.Row(
                         controls=[
                             ft.Text(
-                                f"{dia_nombre}  ·  {desc}",
+                                f"{dia_nombre}{semana_str}  ·  {desc}",
                                 color=THEME_TEXT_PRIMARY,
                                 size=13,
                                 expand=True,
@@ -164,10 +166,10 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         return ft.Column(controls=items, spacing=0, scroll=ft.ScrollMode.AUTO)
 
     def _actualizar_rutinas():
-        state["existing_weekdays"].clear()
+        state["semana_guardada"] = [set(), set(), set(), set()]
         for r in _cargar_rutinas():
-            if r.repetir_semanal:
-                state["existing_weekdays"].add(r.dia_semana)
+            if r.repetir_semanal and r.semana is not None:
+                state["semana_guardada"][r.semana - 1].add(r.dia_semana)
         rutinas_lista.content = _construir_lista_rutinas()
         _construir_dias()
 
@@ -190,44 +192,56 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
     def cerrar_modal(e=None):
         modal_rutina.open = False
         page.update()
-
-    # ── Guardar ──────────────────────────────────────────────────
-    def _guardar(e):
-        if not state["selected_weekdays"]:
-            return
-        descripcion = (descripcion_field.value or "").strip()
-
-        for wd in state["selected_weekdays"]:
-            existente = session.query(Cronograma).filter_by(
-                miembro_id=miembro_id, dia_semana=wd, repetir_semanal=True,
-            ).first()
-            if existente:
-                existente.descripcion = descripcion
-            else:
-                session.add(Cronograma(
-                    miembro_id=miembro_id, dia_semana=wd,
-                    descripcion=descripcion, repetir_semanal=True,
-                ))
-        session.commit()
-        cerrar_modal()
         if on_guardar:
             on_guardar()
 
-    # ── Generar Excel ──────────────────────────────────────────
-    async def _generar_excel(e):
-        rutinas = _cargar_rutinas()
-        if not rutinas:
+    # ── Agregar ──────────────────────────────────────────────────
+    def _agregar(e):
+        descripcion = (descripcion_field.value or "").strip()
+        if not descripcion:
             page.snack_bar = ft.SnackBar(
-                content=ft.Text("No hay rutinas registradas"), duration=2500
+                content=ft.Text("Escribe una descripción primero"), duration=2500
             )
             page.snack_bar.open = True
             page.update()
             return
 
+        for semana in range(4):
+            for wd in state["semana_pending"][semana]:
+                existente = session.query(Cronograma).filter_by(
+                    miembro_id=miembro_id, dia_semana=wd, semana=semana + 1, repetir_semanal=True,
+                ).first()
+                if existente:
+                    existente.descripcion = descripcion
+                else:
+                    session.add(Cronograma(
+                        miembro_id=miembro_id, dia_semana=wd, semana=semana + 1,
+                        descripcion=descripcion, repetir_semanal=True,
+                    ))
+                state["semana_guardada"][semana].add(wd)
+        session.commit()
+
+        state["semana_pending"] = [set(), set(), set(), set()]
+        descripcion_field.value = ""
+        rutinas_lista.content = _construir_lista_rutinas()
+        _construir_dias()
+        page.update()
+
+    # ── Generar Excel ──────────────────────────────────────────
+    async def _generar_excel(e):
+        if not any(state["semana_guardada"]) and not any(state["semana_pending"]):
+            page.snack_bar = ft.SnackBar(
+                content=ft.Text("No hay rutinas para exportar"), duration=2500
+            )
+            page.snack_bar.open = True
+            page.update()
+            return
+
+        rutinas = _cargar_rutinas()
         rutinas_dict = {}
         for r in rutinas:
-            if r.repetir_semanal:
-                rutinas_dict[r.dia_semana] = r.descripcion or ""
+            if r.repetir_semanal and r.semana is not None:
+                rutinas_dict[(r.semana - 1, r.dia_semana)] = r.descripcion or ""
 
         wb = openpyxl.Workbook()
         ws = wb.active
@@ -269,7 +283,12 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
             ws.cell(row=row_num, column=1).alignment = center_align
             ws.cell(row=row_num, column=1).border = thin_border
             for dia_idx in range(7):
-                desc = rutinas_dict.get(dia_idx, "")
+                if dia_idx in state["semana_guardada"][semana]:
+                    desc = rutinas_dict.get((semana, dia_idx), "")
+                elif dia_idx in state["semana_pending"][semana]:
+                    desc = (descripcion_field.value or "").strip()
+                else:
+                    desc = ""
                 cell = ws.cell(row=row_num, column=dia_idx + 2, value=desc)
                 cell.fill = fill
                 cell.font = cuerpo_font
@@ -313,27 +332,16 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         if not ruta:
             return
 
-        if page.web or es_mobile:
-            page.snack_bar = ft.SnackBar(
-                content=ft.Text(f"Guardado: {nombre_archivo}"), duration=3000
-            )
-            page.snack_bar.open = True
-            page.update()
-        else:
-            def _abrir_excel(e):
-                os.startfile(ruta)
-            page.snack_bar = ft.SnackBar(
-                content=ft.Text(f"Guardado: {Path(ruta).name}"),
-                action="Abrir archivo",
-                action_color=THEME_TEAL,
-                on_action=_abrir_excel,
-                duration=5000,
-            )
-            page.snack_bar.open = True
-            page.update()
+        page.snack_bar = ft.SnackBar(
+            content=ft.Text("Excel creado!"),
+            bgcolor=THEME_TEAL,
+            duration=3000,
+        )
+        page.snack_bar.open = True
+        page.update()
 
-    cancelar_btn = ft.OutlinedButton(
-        content=ft.Text("Cancelar"),
+    salir_btn = ft.OutlinedButton(
+        content=ft.Text("Salir"),
         style=ft.ButtonStyle(
             color=THEME_TEXT_PRIMARY,
             side=ft.BorderSide(1, THEME_BORDER_COLOR),
@@ -342,12 +350,12 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
         on_click=lambda e: cerrar_modal(),
     )
 
-    guardar_btn = ft.FilledButton(
-        content=ft.Text("Guardar"),
+    agregar_btn = ft.FilledButton(
+        content=ft.Text("Agregar"),
         bgcolor=THEME_TEAL,
         color=THEME_TEAL_TEXT,
         style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
-        on_click=_guardar,
+        on_click=_agregar,
     )
 
     excel_btn = ft.OutlinedButton(
@@ -395,7 +403,7 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
 
     bloque_botones = ft.Container(
         content=ft.Row(
-            controls=[excel_btn, guardar_btn, cancelar_btn],
+            controls=[excel_btn, agregar_btn, salir_btn],
             alignment=ft.MainAxisAlignment.CENTER,
             spacing=10,
         ),

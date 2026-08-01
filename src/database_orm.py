@@ -18,6 +18,7 @@ from sqlalchemy import (
     Column,
     Boolean,
     create_engine,
+    text,
 
 )
 #locales
@@ -75,6 +76,7 @@ class Cronograma(Base):
     miembro_id = Column(Integer(), ForeignKey("miembros.id"))
     dia_semana = Column(Integer(), nullable=False)
     fecha = Column(DateTime(), nullable=True)
+    semana = Column(Integer(), nullable=True)
     descripcion = Column(String(200), nullable=True)
     repetir_semanal = Column(Boolean(), default=True)
 
@@ -331,6 +333,13 @@ def _inicializar_db():
     """
     os.makedirs("storage/data", exist_ok=True)
     Base.metadata.create_all(engine)
+
+    with engine.connect() as conn:
+        result = conn.execute(text("PRAGMA table_info(cronogramas)"))
+        columnas = [row[1] for row in result]
+        if "semana" not in columnas:
+            conn.execute(text("ALTER TABLE cronogramas ADD COLUMN semana INTEGER"))
+            conn.commit()
 
 
 # Inicializar BD automáticamente al importar el módulo
