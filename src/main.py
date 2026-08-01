@@ -54,7 +54,7 @@ async def main(page: ft.Page):
         "show_laps": False,
         "start_time": 0.0,
         "accumulated_ms": 0.0,
-        "is_24h": False,
+        "swapped": False,
     }
 
     # ── Build components ───────────────────────────────────────────
@@ -62,7 +62,7 @@ async def main(page: ft.Page):
 
     display, drefs = create_stopwatch_display(on_click=lambda: _open_modal())
 
-    clock, clock_refs = create_real_time_clock()
+    clock, clock_refs = create_real_time_clock(on_swap=lambda: _toggle_swap())
 
     btns, btn_refs = create_control_buttons(
         on_start=lambda: _handle_start(),
@@ -82,22 +82,11 @@ async def main(page: ft.Page):
         on_fullscreen=lambda: _toggle_fullscreen(),
     )
 
-    # ── Clock toggle (override component click) ────────────────────
-    def _toggle_clock_format(e=None):
-        S["is_24h"] = not S["is_24h"]
-        _update_clock_text()
+    # ── Swap clock / stopwatch display ─────────────────────────────
+    def _toggle_swap():
+        S["swapped"] = not S["swapped"]
+        _update_display()
         page.update()
-
-    clock.on_click = _toggle_clock_format
-
-    def _update_clock_text():
-        now = datetime.now()
-        if S["is_24h"]:
-            clock_refs["text"].value = now.strftime("%H:%M:%S")
-        else:
-            clock_refs["text"].value = now.strftime("%I:%M:%S %p").lower().lstrip("0")
-
-    _update_clock_text()
 
     # ── Layout ─────────────────────────────────────────────────────
     scrollable_col = ft.Column(
@@ -140,7 +129,6 @@ async def main(page: ft.Page):
 
         def _confirm(h, m, s):
             total = (h * 3600 + m * 60 + s) * 1000
-            _cancel_timer()
             S["start_time"] = 0
             S["accumulated_ms"] = 0
             S["elapsed_ms"] = 0
@@ -165,65 +153,37 @@ async def main(page: ft.Page):
         dialog = create_time_select_modal(ih, im, is_, S["font_style"], _confirm, _cancel)
         page.show_dialog(dialog)
 
-    # ── Timer logic ────────────────────────────────────────────────
-    _timer_task = None
-
-    def _cancel_timer():
-        nonlocal _timer_task
-        if _timer_task:
-            _timer_task.cancel()
-            _timer_task = None
-
-    def _start_timer():
-        nonlocal _timer_task
-        _cancel_timer()
-        _timer_task = asyncio.create_task(_timer_loop())
-
+    # ── Timer loop ──────────────────────────────────────────────────
     async def _timer_loop():
-        try:
-            while True:
-                if S["status"] == "running" and S["start_time"] > 0:
-                    now = time.perf_counter()
-                    delta_ms = (now - S["start_time"]) * 1000
-                    total_ms = S["accumulated_ms"] + delta_ms
-
-                    if S["mode"] == "stopwatch":
-                        S["elapsed_ms"] = int(total_ms)
-                    else:
-                        remaining = S["target_ms"] - total_ms
-                        if remaining <= 0:
-                            S["remaining_ms"] = 0
-                            S["elapsed_ms"] = 0
-                            S["status"] = "idle"
-                            S["mode"] = "stopwatch"
-                            S["target_ms"] = 0
-                            S["start_time"] = 0
-                            S["accumulated_ms"] = 0
-                            if S["sound_enabled"]:
-                                play_beep("reset")
-                            _update_display()
-                            _update_buttons()
-                            page.update()
-                            await asyncio.sleep(0.03)
-                            continue
-                        else:
-                            S["remaining_ms"] = int(remaining)
-
-                    _update_display()
-                    page.update()
-
-                await asyncio.sleep(0.03)
-        except asyncio.CancelledError:
-            pass
-
-    # ── Clock update loop ──────────────────────────────────────────
-    async def _clock_loop():
         while True:
-            _update_clock_text()
-            page.update()
-            await asyncio.sleep(1)
+            if S["status"] == "running" and S["start_time"] > 0:
+                now = time.perf_counter()
+                delta_ms = (now - S["start_time"]) * 1000
+                total_ms = S["accumulated_ms"] + delta_ms
 
-    asyncio.create_task(_clock_loop())
+                if S["mode"] == "stopwatch":
+                    S["elapsed_ms"] = int(total_ms)
+                else:
+                    remaining = S["target_ms"] - total_ms
+                    if remaining <= 0:
+                        S["remaining_ms"] = 0
+                        S["elapsed_ms"] = 0
+                        S["status"] = "idle"
+                        S["mode"] = "stopwatch"
+                        S["target_ms"] = 0
+                        S["start_time"] = 0
+                        S["accumulated_ms"] = 0
+                        if S["sound_enabled"]:
+                            play_beep("reset")
+                    else:
+                        S["remaining_ms"] = int(remaining)
+
+            _update_display()
+            _update_buttons()
+            page.update()
+            await asyncio.sleep(0.03)
+
+    asyncio.create_task(_timer_loop())
 
     # ── Display / UI update helpers ────────────────────────────────
     def _get_active_ms():
@@ -238,9 +198,21 @@ async def main(page: ft.Page):
         m = str((total_secs % 3600) // 60).zfill(2)
         s = str(total_secs % 60).zfill(2)
 
-        drefs["hour"].value = h
-        drefs["min"].value = m
-        drefs["sec"].value = s
+        now = datetime.now()
+        ch = str(now.hour).zfill(2)
+        cm = str(now.minute).zfill(2)
+        cs = str(now.second).zfill(2)
+
+        if S["swapped"]:
+            drefs["hour"].value = ch
+            drefs["min"].value = cm
+            drefs["sec"].value = cs
+            clock_refs["text"].value = f"{h}:{m}:{s}"
+        else:
+            drefs["hour"].value = h
+            drefs["min"].value = m
+            drefs["sec"].value = s
+            clock_refs["text"].value = f"{ch}:{cm}:{cs}"
 
         is_cd = S["mode"] == "countdown"
         drefs["badge"].bgcolor = "#fef3c7" if is_cd else "#27272a"
@@ -340,14 +312,12 @@ async def main(page: ft.Page):
         S["status"] = "running"
         _update_buttons()
         page.update()
-        _start_timer()
 
     def _handle_pause():
         if S["status"] != "running":
             return
         if S["sound_enabled"]:
             play_beep("pause")
-        _cancel_timer()
         now = time.perf_counter()
         S["accumulated_ms"] += (now - S["start_time"]) * 1000
         S["start_time"] = 0
@@ -359,7 +329,6 @@ async def main(page: ft.Page):
     def _handle_reset():
         if S["sound_enabled"]:
             play_beep("reset")
-        _cancel_timer()
         S["start_time"] = 0
         S["accumulated_ms"] = 0
         S["elapsed_ms"] = 0
