@@ -114,10 +114,17 @@ def create_time_select_modal(
         )
 
     def _handle_input(e, value_ref, min_val, max_val, text_field):
+        val_str = e.control.value
+        if not val_str:
+            value_ref[0] = 0
+            return
         try:
-            val = int(e.control.value) if e.control.value else 0
+            val = int(val_str)
         except ValueError:
-            val = min_val
+            value_ref[0] = 0
+            text_field.value = ""
+            text_field.update()
+            return
         val = max(min_val, min(max_val, val))
         value_ref[0] = val
         text_field.value = str(val).zfill(2)
