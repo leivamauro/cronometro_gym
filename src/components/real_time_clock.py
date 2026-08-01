@@ -39,6 +39,7 @@ def create_real_time_clock() -> tuple:
         border=border_all(1, ft.Colors.with_opacity(0.05, ft.Colors.WHITE)),
         border_radius=16,
         padding=ft.Padding(left=40, top=14, right=40, bottom=14),
+        width=400,
         ink=True,
         on_click=toggle_format,
         shadow=ft.BoxShadow(0, 20, ft.Colors.with_opacity(0.4, ft.Colors.BLACK), ft.Offset(0, 4)),
