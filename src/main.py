@@ -155,7 +155,7 @@ async def main(page: ft.Page):
             page.pop_dialog()
             page.update()
 
-        dialog = create_time_select_modal(ih, im, is_, S["font_style"], _confirm, _cancel)
+        dialog = create_time_select_modal(ih, im, is_, S["font_style"], _confirm, _cancel, is_mobile=is_mobile)
         page.show_dialog(dialog)
 
     # ── Timer loop ──────────────────────────────────────────────────

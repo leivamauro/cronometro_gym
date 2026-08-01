@@ -19,6 +19,7 @@ def create_time_select_modal(
     font_style: str,
     on_confirm: callable,
     on_cancel: callable,
+    is_mobile: bool = False,
 ) -> ft.AlertDialog:
     font = _font_family(font_style)
 
@@ -77,26 +78,25 @@ def create_time_select_modal(
                         spacing=0,
                         controls=[
                             txt,
-                            ft.Column(
-                                spacing=0,
-                                controls=[
-                                    ft.IconButton(
-                                        icon=ft.Icons.KEYBOARD_ARROW_UP,
-                                        icon_size=16,
-                                        icon_color="#d1d5db",
-                                        on_click=increment,
-                                        style=ft.ButtonStyle(padding=ft.Padding(left=0, top=0, right=0, bottom=0)),
-                                    ),
-                                    ft.IconButton(
-                                        icon=ft.Icons.KEYBOARD_ARROW_DOWN,
-                                        icon_size=16,
-                                        icon_color="#d1d5db",
-                                        on_click=decrement,
-                                        style=ft.ButtonStyle(padding=ft.Padding(left=0, top=0, right=0, bottom=0)),
-                                    ),
-                                ],
-                            ),
-                        ],
+                        ] + ([ft.Column(
+                            spacing=0,
+                            controls=[
+                                ft.IconButton(
+                                    icon=ft.Icons.KEYBOARD_ARROW_UP,
+                                    icon_size=16,
+                                    icon_color="#d1d5db",
+                                    on_click=increment,
+                                    style=ft.ButtonStyle(padding=ft.Padding(left=0, top=0, right=0, bottom=0)),
+                                ),
+                                ft.IconButton(
+                                    icon=ft.Icons.KEYBOARD_ARROW_DOWN,
+                                    icon_size=16,
+                                    icon_color="#d1d5db",
+                                    on_click=decrement,
+                                    style=ft.ButtonStyle(padding=ft.Padding(left=0, top=0, right=0, bottom=0)),
+                                ),
+                            ],
+                        )] if not is_mobile else []),
                     ),
                     bgcolor="#3d4653",
                     border=border_all(2, border_color),
