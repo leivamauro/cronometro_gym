@@ -9,11 +9,11 @@ def create_stopwatch_display(on_click: callable) -> tuple:
     font = "Architects Daughter"
 
     hour_text = ft.Text(
-        "00", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE,
+        "00", weight=ft.FontWeight.BOLD, color=ft.Colors.RED_400,
         font_family=font, text_align=ft.TextAlign.CENTER, no_wrap=True,
     )
     min_text = ft.Text(
-        "00", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE,
+        "00", weight=ft.FontWeight.BOLD, color=ft.Colors.RED_400,
         font_family=font, text_align=ft.TextAlign.CENTER, no_wrap=True,
     )
     sec_text = ft.Text(
@@ -21,6 +21,7 @@ def create_stopwatch_display(on_click: callable) -> tuple:
         font_family=font, text_align=ft.TextAlign.CENTER, no_wrap=True,
     )
 
+    # badge que indica en que modo esta el cronometro (cronometro o cuenta regresiva)
     badge_text = ft.Text(
         "\u23f1\ufe0f Modo Cron\u00f3metro",
         size=12, weight=ft.FontWeight.W_600, color="#a1a1aa",
@@ -33,11 +34,12 @@ def create_stopwatch_display(on_click: callable) -> tuple:
         border=border_all(1, "#3f3f46"),
     )
 
+    # box de cada numero (hr, min, seg) con su label
     def _box(text_ctrl, label: str) -> ft.Container:
         box = ft.Container(
             content=ft.Stack([
-                ft.Container(content=text_ctrl, alignment=ft.alignment.Alignment(0, 0), expand=True),
-                ft.Container(
+                ft.Container(content=text_ctrl, alignment=ft.alignment.Alignment(0, 0), expand=True), # container del numero
+                ft.Container( # container de label (hr, min, seg)
                     content=ft.Text(
                         label, size=14, color="#888888", font_family=font,
                         no_wrap=True,
@@ -49,7 +51,7 @@ def create_stopwatch_display(on_click: callable) -> tuple:
             bgcolor="#1c1c1e",
             border=border_all(1, ft.Colors.with_opacity(0.1, ft.Colors.WHITE)),
             border_radius=20,
-            ink=True,
+            #ink=True,
             on_click=lambda _: on_click(),
             shadow=ft.BoxShadow(0, 30, ft.Colors.with_opacity(0.6, ft.Colors.BLACK), ft.Offset(0, 10)),
         )
@@ -65,7 +67,7 @@ def create_stopwatch_display(on_click: callable) -> tuple:
         spacing=8,
         controls=[
             badge,
-            ft.Row(
+            ft.ResponsiveRow(
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=8,
                 controls=[box_h, box_m, box_s],
