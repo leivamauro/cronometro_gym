@@ -12,6 +12,7 @@ dependencies = [
     "SQLAlchemy",
     "python-dateutil",
     "openpyxl",
+    "reportlab",
 ]
 
 [project.optional-dependencies]

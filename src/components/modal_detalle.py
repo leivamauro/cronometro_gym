@@ -1,13 +1,21 @@
 # python
+import io
 from datetime import datetime
+from pathlib import Path
 import flet as ft
+from flet import FilePicker, FilePickerFileType
+# reportlab
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors as rl_colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 # locales
 from constants import *
 from database_orm import (
     Miembro, HistorialPago,
     _estado_semaforo, _ultimo_pago,
     _calcular_vencimiento, _dias_restantes, _dias_pasados,
-    _inicio_ciclo_pago, _leer_configuracion,
+    _inicio_ciclo_pago, _leer_configuracion, _fecha_vencimiento,
 )
 
 
@@ -54,6 +62,126 @@ def crear_modal_detalles(nombre_miembro: str, page: ft.Page, session, miembro_id
         modal_detalles.open = False
         page.update()
 
+    # --- Generar PDF ---
+    async def _generar_pdf(e):
+        fecha_venc = _fecha_vencimiento(miembro, session)
+        fecha_ultimo = ultimo_pago.fecha_pago.strftime('%d/%m/%Y') if ultimo_pago else "—"
+
+        fecha_reg = miembro.fecha_registro.strftime('%d/%m/%Y') if miembro.fecha_registro else "—"
+        fecha_venc_str = fecha_venc.strftime('%d/%m/%Y') if fecha_venc else "—"
+
+        if estado == "vencido":
+            texto_estado_pdf = "Adeuda"
+            color_estado_pdf = rl_colors.HexColor("#C62828")
+            dias_texto = f"Vencido hace {_dias_pasados(miembro, session)} días"
+            color_dias = rl_colors.HexColor("#C62828")
+        elif estado == "en_prueba":
+            texto_estado_pdf = "Período de prueba"
+            color_estado_pdf = rl_colors.HexColor("#F9A825")
+            inicio = _inicio_ciclo_pago(miembro)
+            dias_prueba = (inicio - datetime.now()).days
+            dias_texto = f"Prueba - {dias_prueba} días restantes"
+            color_dias = rl_colors.HexColor("#F9A825")
+        else:
+            texto_estado_pdf = "Al día"
+            color_estado_pdf = rl_colors.HexColor("#2E7D32")
+            dias_texto = f"Vence en {_dias_restantes(miembro, session)} días"
+            color_dias = rl_colors.HexColor("#2E7D32")
+
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4,
+                                leftMargin=40, rightMargin=40, topMargin=40, bottomMargin=40)
+        styles = getSampleStyleSheet()
+
+        subtitulo_style = ParagraphStyle('Subtitulo', parent=styles['Normal'],
+                                         fontSize=12, textColor=rl_colors.HexColor("#666666"),
+                                         alignment=1, spaceAfter=20)
+
+        elementos = []
+        logo_path = str(ASSETS_DIR / "images" / "recoverfit_banner.png")
+        logo = Image(logo_path, width=180, height=60, kind='proportional')
+        logo.hAlign = 'CENTER'
+        elementos.append(logo)
+        elementos.append(Spacer(1, 10))
+        elementos.append(Paragraph("Comprobante de Pago", subtitulo_style))
+
+        data = [
+            ["Nombre", "Fecha Registro", "Último Pago", "Vencimiento"],
+            [miembro.nombre, fecha_reg, fecha_ultimo, fecha_venc_str],
+        ]
+        col_widths = [doc.width * 0.30, doc.width * 0.20, doc.width * 0.25, doc.width * 0.25]
+
+        tabla = Table(data, colWidths=col_widths)
+        tabla_style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), rl_colors.HexColor("#1B6CA8")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), rl_colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BACKGROUND', (0, 1), (-1, 1), rl_colors.HexColor("#F0F0F0")),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, rl_colors.black),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ])
+        tabla.setStyle(tabla_style)
+        elementos.append(tabla)
+        elementos.append(Spacer(1, 24))
+
+        info_style = ParagraphStyle('Info', parent=styles['Normal'],
+                                    fontSize=11, leading=18)
+        elementos.append(Paragraph(
+            f"<b>Estado:</b> <font color='{color_estado_pdf.hexval()}'>"
+            f"{texto_estado_pdf}</font>", info_style))
+        elementos.append(Paragraph(
+            f"<b>Días:</b> <font color='{color_dias.hexval()}'>"
+            f"{dias_texto}</font>", info_style))
+        elementos.append(Spacer(1, 30))
+
+        fecha_gen = datetime.now().strftime('%d/%m/%Y')
+        pie_style = ParagraphStyle('Pie', parent=styles['Normal'],
+                                   fontSize=9, textColor=rl_colors.HexColor("#999999"),
+                                   alignment=1)
+        elementos.append(Paragraph(f"Generado el {fecha_gen}", pie_style))
+        elementos.append(Paragraph("RecoverFit - Gestión de Clientes", pie_style))
+
+        doc.build(elementos)
+        pdf_bytes = buffer.getvalue()
+
+        name_clean = miembro.nombre.replace(' ', '_')
+        name_clean = "".join(c for c in name_clean if c.isalnum() or c in ('_', '-'))
+        fecha_str = datetime.now().strftime("%Y%m%d")
+        nombre_archivo = f"Comprobante_{name_clean}_{fecha_str}.pdf"
+
+        picker = FilePicker()
+        es_mobile = page.platform is not None and page.platform.is_mobile()
+
+        if page.web or es_mobile:
+            await picker.save_file(
+                dialog_title="Guardar Comprobante PDF",
+                file_name=nombre_archivo,
+                file_type=FilePickerFileType.CUSTOM,
+                allowed_extensions=["pdf"],
+                src_bytes=pdf_bytes,
+            )
+        else:
+            ruta = await picker.save_file(
+                dialog_title="Guardar Comprobante PDF",
+                file_name=nombre_archivo,
+                file_type=FilePickerFileType.CUSTOM,
+                allowed_extensions=["pdf"],
+            )
+            if ruta:
+                Path(ruta).write_bytes(pdf_bytes)
+
+        page.snack_bar = ft.SnackBar(
+            content=ft.Text("PDF creado!"),
+            bgcolor=THEME_TEAL,
+            duration=3000,
+        )
+        page.snack_bar.open = True
+        page.update()
+
     cancelar_btn = ft.OutlinedButton(
         content=ft.Text("Cancelar"),
         style=ft.ButtonStyle(
@@ -62,6 +190,20 @@ def crear_modal_detalles(nombre_miembro: str, page: ft.Page, session, miembro_id
             mouse_cursor=ft.MouseCursor.CLICK,
         ),
         on_click=cerrar_modal,
+    )
+
+    pdf_btn = ft.OutlinedButton(
+        content=ft.Row(
+            controls=[ft.Icon(ft.Icons.PICTURE_AS_PDF, size=16, color=THEME_TEAL), ft.Text("Baucher")],
+            spacing=4,
+            alignment=ft.MainAxisAlignment.CENTER,
+        ),
+        style=ft.ButtonStyle(
+            color=THEME_TEAL,
+            side=ft.BorderSide(1, THEME_TEAL),
+            mouse_cursor=ft.MouseCursor.CLICK,
+        ),
+        on_click=_generar_pdf,
     )
 
     # --- Texto de estado y colores ---
@@ -208,7 +350,7 @@ def crear_modal_detalles(nombre_miembro: str, page: ft.Page, session, miembro_id
                 tabla_cabecera,
                 ft.Column(controls=filas_historial, scroll=ft.ScrollMode.AUTO, spacing=0),
                 ft.Container(expand=True),
-                ft.Row(controls=[ft.Container(expand=True), cancelar_btn]),
+                ft.Row(controls=[ft.Container(expand=True), pdf_btn, cancelar_btn]),
             ],
             horizontal_alignment=ft.CrossAxisAlignment.START,
             spacing=8,
@@ -231,7 +373,7 @@ def crear_modal_detalles(nombre_miembro: str, page: ft.Page, session, miembro_id
                 ft.Container(height=5),
                 tabla_cabecera,
                 ft.Column(controls=filas_historial, scroll=ft.ScrollMode.AUTO, expand=True, spacing=0),
-                ft.Row(controls=[ft.Container(expand=True), cancelar_btn]),
+                ft.Row(controls=[ft.Container(expand=True), pdf_btn, cancelar_btn]),
             ],
             spacing=8,
         )
