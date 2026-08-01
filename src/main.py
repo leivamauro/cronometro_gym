@@ -109,6 +109,7 @@ async def main(page: ft.Page):
     main_container = ft.Container(
         content=ft.Column(
             spacing=6,
+            horizontal_alignment=ft.CrossAxisAlignment.CENTER,
             controls=[
                 header,
                 ft.Container(height=8),
