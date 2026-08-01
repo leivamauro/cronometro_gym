@@ -32,7 +32,10 @@ async def main(page: ft.Page):
     page.window.height = 900
     page.window.min_width = 400
     page.window.min_height = 720
-    await page.window.center()
+    try:
+        await page.window.center()
+    except Exception:
+        pass
 
     page.fonts = {
         "Architects Daughter": "assets/fonts/ArchitectsDaughter-Regular.ttf",
