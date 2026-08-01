@@ -442,7 +442,26 @@ async def main(page: ft.Page):
 
     page.on_keyboard_event = _on_keyboard
 
+    # ── Responsive box sizing ──────────────────────────────────────
+    def _update_box_sizes():
+        win_w = page.window.width
+        available = win_w - 32
+        box_size = min(max(90, (available - 24) // 3), 270)
+        text_size = int(box_size * 0.55)
+        for box in drefs["boxes"]:
+            box.width = box_size
+            box.height = box_size
+        for txt in drefs["texts"]:
+            txt.size = text_size
+
+    def _on_resize(e):
+        _update_box_sizes()
+        page.update()
+
+    page.on_resize = _on_resize
+
     # ── Initial render ─────────────────────────────────────────────
+    _update_box_sizes()
     _update_display()
     _update_buttons()
     _update_laps_panel()

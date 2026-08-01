@@ -4,28 +4,20 @@ import flet as ft
 from utils.helpers import border_all
 
 
-def _font_family(font_style: str) -> str:
-    return {
-        "handwritten": "Architects Daughter",
-        "caveat": "Caveat",
-        "comic": "Comic Neue",
-    }.get(font_style, "Architects Daughter")
-
-
 def create_stopwatch_display(on_click: callable) -> tuple:
-    """Retorna (control, refs) donde refs contiene los textos dinámicos."""
+    """Retorna (control, refs) donde refs contiene los textos y cajas dinámicos."""
     font = "Architects Daughter"
 
     hour_text = ft.Text(
-        "00", size=72, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE,
+        "00", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE,
         font_family=font, text_align=ft.TextAlign.CENTER, no_wrap=True,
     )
     min_text = ft.Text(
-        "00", size=72, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE,
+        "00", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE,
         font_family=font, text_align=ft.TextAlign.CENTER, no_wrap=True,
     )
     sec_text = ft.Text(
-        "00", size=72, weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE,
+        "00", weight=ft.FontWeight.BOLD, color=ft.Colors.WHITE,
         font_family=font, text_align=ft.TextAlign.CENTER, no_wrap=True,
     )
 
@@ -41,15 +33,8 @@ def create_stopwatch_display(on_click: callable) -> tuple:
         border=border_all(1, "#3f3f46"),
     )
 
-    box_style = {
-        "width": 130, "height": 130, "bgcolor": "#1c1c1e",
-        "border": border_all(1, ft.Colors.with_opacity(0.1, ft.Colors.WHITE)),
-        "border_radius": 20, "ink": True,
-        "shadow": ft.BoxShadow(0, 30, ft.Colors.with_opacity(0.6, ft.Colors.BLACK), ft.Offset(0, 10)),
-    }
-
     def _box(text_ctrl, label: str) -> ft.Container:
-        return ft.Container(
+        box = ft.Container(
             content=ft.Stack([
                 ft.Container(content=text_ctrl, alignment=ft.alignment.Alignment(0, 0), expand=True),
                 ft.Container(
@@ -61,9 +46,18 @@ def create_stopwatch_display(on_click: callable) -> tuple:
                     padding=ft.Padding(top=8, right=10),
                 ),
             ]),
+            bgcolor="#1c1c1e",
+            border=border_all(1, ft.Colors.with_opacity(0.1, ft.Colors.WHITE)),
+            border_radius=20,
+            ink=True,
             on_click=lambda _: on_click(),
-            **box_style,
+            shadow=ft.BoxShadow(0, 30, ft.Colors.with_opacity(0.6, ft.Colors.BLACK), ft.Offset(0, 10)),
         )
+        return box
+
+    box_h = _box(hour_text, "hr")
+    box_m = _box(min_text, "min")
+    box_s = _box(sec_text, "seg")
 
     control = ft.Column(
         alignment=ft.MainAxisAlignment.CENTER,
@@ -74,11 +68,7 @@ def create_stopwatch_display(on_click: callable) -> tuple:
             ft.Row(
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=12,
-                controls=[
-                    _box(hour_text, "hr"),
-                    _box(min_text, "min"),
-                    _box(sec_text, "seg"),
-                ],
+                controls=[box_h, box_m, box_s],
             ),
         ],
     )
@@ -90,6 +80,8 @@ def create_stopwatch_display(on_click: callable) -> tuple:
         "badge": badge,
         "badge_text": badge_text,
         "container": control,
+        "boxes": [box_h, box_m, box_s],
+        "texts": [hour_text, min_text, sec_text],
     }
 
     return control, refs
