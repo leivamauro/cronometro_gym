@@ -446,7 +446,7 @@ async def main(page: ft.Page):
     def _update_box_sizes():
         win_w = page.window.width
         available = win_w - 32
-        box_size = min(max(90, (available - 24) // 3), 270)
+        box_size = min(max(90, (available - 24) // 3), 500)
         text_size = int(box_size * 0.55)
         for box in drefs["boxes"]:
             box.width = box_size
