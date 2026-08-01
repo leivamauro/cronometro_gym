@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .font-handwritten {
+    font-family: 'Architects Daughter', 'Caveat', 'Comic Neue', cursive, sans-serif;
+  }
+  .font-casual {
+    font-family: 'Caveat', 'Architects Daughter', 'Comic Neue', cursive, sans-serif;
+  }
+  .font-comic {
+    font-family: 'Comic Neue', cursive, sans-serif;
+  }
+  .font-brand {
+    font-family: 'Montserrat', sans-serif;
+  }
+}
+
+/* Custom sketch-style border effect if needed */
+.sketch-border {
+  border-radius: 20px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+

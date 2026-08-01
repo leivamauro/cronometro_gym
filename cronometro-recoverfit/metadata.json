@@ -1,0 +1,6 @@
+{
+  "name": "Cronómetro Recoverfit",
+  "description": "Aplicación de cronómetro y reloj en tiempo real para Recoverfit Recuperación y Entrenamiento",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
