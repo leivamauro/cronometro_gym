@@ -6,7 +6,7 @@ from constants import *
 
 class Header(ft.Container):
 
-    def __init__(self, on_add_member=None):
+    def __init__(self, on_add_member=None, on_settings=None):
         super().__init__()
 
         # Logo como círculo
@@ -40,14 +40,44 @@ class Header(ft.Container):
             col=BREAK_POINTS,
         )
 
-        # Botón
-        button = ft.FilledButton(
-            content=ft.Text(value="AGREGAR"),
+        # Botón agregar
+        add_button = ft.Container(
+            content=ft.IconButton(
+                icon=ft.Icons.ADD,
+                icon_color=THEME_TEAL_TEXT,
+                icon_size=22,
+                mouse_cursor=ft.MouseCursor.CLICK,
+                tooltip="Agregar miembro",
+                on_click=on_add_member or (lambda e: None),
+            ),
+            width=44,
+            height=44,
+            border_radius=22,
+            bgcolor=BTNS_BG,
+            alignment=ft.Alignment.CENTER,
+        )
+
+        # Botón configuración
+        settings_button = ft.Container(
+            content=ft.IconButton(
+                icon=ft.Icons.SETTINGS,
+                icon_color=THEME_TEAL_TEXT,
+                icon_size=22,
+                mouse_cursor=ft.MouseCursor.CLICK,
+                tooltip="Configuración",
+                on_click=on_settings or (lambda e: None),
+            ),
+            width=44,
+            height=44,
+            border_radius=22,
             bgcolor=THEME_TEAL,
-            color=THEME_TEAL_TEXT,
-            icon=ft.Icons.ADD,
-            style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
-            on_click=on_add_member or (lambda e: None),
+            alignment=ft.Alignment.CENTER,
+        )
+
+        buttons_row = ft.Row(
+            controls=[add_button, settings_button],
+            spacing=10,
+            alignment=ft.MainAxisAlignment.END,
             col=BREAK_POINTS,
         )
 
@@ -55,7 +85,7 @@ class Header(ft.Container):
         content = ft.Row(
             controls=[
                 ft.ResponsiveRow(
-                    controls=[logo, title, button],
+                    controls=[logo, title, buttons_row],
                     spacing=15,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     expand=True,

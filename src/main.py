@@ -41,7 +41,7 @@ def main(page: ft.Page):
 
     def build_layout():
 
-        header = Header(on_add_member=lambda e: abrir_nuevo_miembro())
+        header = Header(on_add_member=lambda e: abrir_nuevo_miembro(), on_settings=lambda e: abrir_conf(page))
 
         # Obtener todos los miembros de la base de datos y crear una card por cada uno
         miembros = db_session.query(Miembro).all()
@@ -78,33 +78,7 @@ def main(page: ft.Page):
             scroll=ft.ScrollMode.AUTO,
         )
 
-        # Botón flotante de configuración (abajo a la izquierda)
-        settings_fab = ft.Container(
-            content=ft.IconButton(
-                icon=ft.Icons.SETTINGS,
-                icon_color=THEME_TEAL_TEXT,
-                icon_size=20,
-                mouse_cursor=ft.MouseCursor.CLICK,
-                on_click=lambda e: abrir_conf(page),
-            ),
-            width=44,
-            height=44,
-            border_radius=22,
-            bgcolor=THEME_TEAL,
-            alignment=ft.Alignment.CENTER,
-        )
-
-        return ft.Stack(
-            controls=[
-                ft.Column(controls=[header, members_list], expand=True),
-                ft.Container(
-                    content=settings_fab,
-                    left=20,
-                    bottom=20,
-                ),
-            ],
-            expand=True,
-        )
+        return ft.Column(controls=[header, members_list], expand=True)
 
     def reconstruir():
         page.controls.clear()
