@@ -70,7 +70,7 @@ class Header(ft.Container):
             width=44,
             height=44,
             border_radius=22,
-            bgcolor=THEME_TEAL,
+            bgcolor=BTNS_BG,
             alignment=ft.Alignment.CENTER,
         )
 

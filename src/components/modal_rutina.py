@@ -66,7 +66,7 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
                 es_pending = i in pending
 
                 if es_guardado or es_pending:
-                    bg = THEME_TEAL
+                    bg = BTNS_BG
                     txt_color = THEME_TEAL_TEXT
                 else:
                     bg = "#3A3D42"
@@ -352,23 +352,21 @@ def crear_modal_rutina(nombre_miembro: str, page: ft.Page, session, miembro_id: 
 
     agregar_btn = ft.FilledButton(
         content=ft.Text("Agregar"),
-        bgcolor=THEME_TEAL,
+        bgcolor=BTNS_BG,
         color=THEME_TEAL_TEXT,
         style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
         on_click=_agregar,
     )
 
-    excel_btn = ft.OutlinedButton(
+    excel_btn = ft.FilledButton(
         content=ft.Row(
-            controls=[ft.Icon(ft.Icons.TABLE_VIEW, size=16, color=THEME_TEAL), ft.Text("Excel")],
+            controls=[ft.Icon(ft.Icons.TABLE_VIEW, size=16, color=THEME_TEAL_TEXT), ft.Text("Excel")],
             spacing=4,
             alignment=ft.MainAxisAlignment.CENTER,
         ),
-        style=ft.ButtonStyle(
-            color=THEME_TEAL,
-            side=ft.BorderSide(1, THEME_TEAL),
-            mouse_cursor=ft.MouseCursor.CLICK,
-        ),
+        bgcolor=BTNS_BG,
+        color=THEME_TEAL_TEXT,
+        style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
         on_click=_generar_excel,
     )
 

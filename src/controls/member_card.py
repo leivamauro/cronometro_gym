@@ -37,7 +37,7 @@ class MemberCard(ft.Container):
 
         # Determinar colores del botón "PAGAR" según el estado
         if self.payment_due:
-            pagar_button_bgcolor = THEME_TEAL
+            pagar_button_bgcolor = BTNS_BG
             pagar_button_color = THEME_TEAL_TEXT
         else:
             pagar_button_bgcolor = THEME_GREY_BUTTON_BG
@@ -45,7 +45,7 @@ class MemberCard(ft.Container):
 
         # Determinar colores del botón "RUTINA" según si tiene rutinas
         if self.has_routine:
-            rutina_button_bgcolor = THEME_TEAL
+            rutina_button_bgcolor = BTNS_BG
             rutina_button_color = THEME_TEAL_TEXT
         else:
             rutina_button_bgcolor = THEME_GREY_BUTTON_BG
@@ -82,7 +82,7 @@ class MemberCard(ft.Container):
         )
         detalles_button = ft.FilledButton(
             content=ft.Text(value="DETALLES", no_wrap=True),
-            bgcolor=THEME_TEAL,
+            bgcolor=BTNS_BG,
             color=THEME_TEAL_TEXT,
             style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
             on_click=lambda e: self._crear_modal_detalles(e),

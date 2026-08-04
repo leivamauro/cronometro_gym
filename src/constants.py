@@ -7,7 +7,7 @@ THEME_BG = "#1E2125"  # Fondo oscuro de la página
 THEME_CARD_BG = "#2B2E33"  # Fondo de cada tarjeta de miembro
 BTNS_BG = "#2E5EAF"  # Fondo del botón del header
 THEME_TEAL = "#59D39E"  # Color de realce (botones, textos clave)
-THEME_TEAL_TEXT = "#000000"  # Texto negro sobre fondo turquesa
+THEME_TEAL_TEXT = "#ECECEC"  # Texto negro sobre fondo turquesa
 THEME_TEXT_PRIMARY = "#FFFFFF"  # Texto principal blanco
 THEME_TEXT_SECONDARY = "#BBBBBB"  # Texto secundario gris claro
 # Fondo de botón deshabilitado visualmente (Juan Pérez)

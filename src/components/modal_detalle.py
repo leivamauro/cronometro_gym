@@ -192,17 +192,15 @@ def crear_modal_detalles(nombre_miembro: str, page: ft.Page, session, miembro_id
         on_click=cerrar_modal,
     )
 
-    pdf_btn = ft.OutlinedButton(
+    pdf_btn = ft.FilledButton(
         content=ft.Row(
-            controls=[ft.Icon(ft.Icons.PICTURE_AS_PDF, size=16, color=THEME_TEAL), ft.Text("Baucher")],
+            controls=[ft.Icon(ft.Icons.PICTURE_AS_PDF, size=16, color=THEME_TEAL_TEXT), ft.Text("Baucher")],
             spacing=4,
             alignment=ft.MainAxisAlignment.CENTER,
         ),
-        style=ft.ButtonStyle(
-            color=THEME_TEAL,
-            side=ft.BorderSide(1, THEME_TEAL),
-            mouse_cursor=ft.MouseCursor.CLICK,
-        ),
+        bgcolor=BTNS_BG,
+        color=THEME_TEAL_TEXT,
+        style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
         on_click=_generar_pdf,
     )
 

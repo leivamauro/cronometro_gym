@@ -93,7 +93,7 @@ def crear_modal_pago(nombre_miembro: str, page: ft.Page, session, miembro_id: in
     # --- QR, Texto y Botones ---
     confirmar_btn = ft.FilledButton(
         content=ft.Text("Confirmar Pago"),
-        bgcolor=THEME_TEAL,
+        bgcolor=BTNS_BG,
         color=THEME_TEAL_TEXT,
         style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
     )
