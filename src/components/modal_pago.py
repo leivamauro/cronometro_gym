@@ -1,8 +1,9 @@
 # python
+from datetime import datetime
 import flet as ft
 # local
 from constants import *
-from database_orm import _leer_configuracion, _fecha_vencimiento, HistorialPago, Miembro
+from database_orm import _leer_configuracion, HistorialPago, Miembro
 
 
 def crear_modal_pago(nombre_miembro: str, page: ft.Page, session, miembro_id: int, on_guardar=None):
@@ -116,8 +117,8 @@ def crear_modal_pago(nombre_miembro: str, page: ft.Page, session, miembro_id: in
         if miembro is None:
             return
 
-        # El pago se registra desde la fecha del último vencimiento
-        fecha_pago = _fecha_vencimiento(miembro, session)
+        # El pago se registra con la fecha real del día del pago
+        fecha_pago = datetime.now()
 
         pago = HistorialPago(
             miembro_id=miembro_id,

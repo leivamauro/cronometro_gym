@@ -136,9 +136,9 @@ def _fecha_vencimiento(miembro: Miembro, session: Session) -> datetime:
     inicio = _inicio_ciclo_pago(miembro)
     ahora = datetime.now()
 
-    # Si todavía está en período de prueba, la fecha de vencimiento es el futuro
+    # Si todavía está en período de prueba, la fecha de vencimiento es al terminar la prueba
     if miembro.es_prueba and miembro.tiempo_prueba_dias > 0 and ahora < inicio:
-        return inicio + relativedelta(months=1)
+        return inicio
 
     # Acumular todos los pagos ordenados cronológicamente
     pagos = (
@@ -149,8 +149,8 @@ def _fecha_vencimiento(miembro: Miembro, session: Session) -> datetime:
     )
 
     if not pagos:
-        # Sin pagos: vence 1 mes después del inicio
-        return inicio + relativedelta(months=1)
+        # Sin pagos: vence al finalizar el inicio del ciclo (sin mes regalado)
+        return inicio
 
     vencimiento = inicio
     for pago in pagos:
@@ -184,7 +184,17 @@ def _calcular_vencimiento(miembro: Miembro, session: Session) -> int:
         return 0
 
     diff = relativedelta(ahora, vencimiento)
-    return diff.months + (diff.years * 12)
+    meses = diff.months + (diff.years * 12)
+
+    tiene_pagos = (
+        session.query(HistorialPago)
+        .filter_by(miembro_id=miembro.id)
+        .count()
+    ) > 0
+    if not tiene_pagos:
+        meses = max(meses, 1)
+
+    return meses
 
 
 def _esta_vencido(miembro: Miembro, session: Session) -> bool:
@@ -254,7 +264,13 @@ def _estado_semaforo(miembro: Miembro, session: Session) -> str:
     if miembro.es_prueba and miembro.tiempo_prueba_dias > 0 and ahora < inicio:
         return "en_prueba"
 
-    if _esta_vencido(miembro, session):
+    tiene_pagos = (
+        session.query(HistorialPago)
+        .filter_by(miembro_id=miembro.id)
+        .count()
+    ) > 0
+
+    if not tiene_pagos or _esta_vencido(miembro, session):
         return "vencido"
 
     return "al_dia"
@@ -309,6 +325,8 @@ def _generar_status_text(miembro: Miembro, session: Session) -> str:
 
     if estado == "vencido":
         meses = _calcular_vencimiento(miembro, session)
+        if meses == 0:
+            return "Vencido - Pendiente de pago"
         precio = float(_leer_configuracion("precio_mensual", session, "3000"))
         deuda = meses * precio
         return f"Vencido - Debe {meses} meses (${deuda:.0f})"

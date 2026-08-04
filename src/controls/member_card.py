@@ -68,21 +68,22 @@ class MemberCard(ft.Container):
 
         # Botones de acción
         pagar_button = ft.FilledButton(
-            content=ft.Text(value="PAGAR"),
+            content=ft.Text(value="PAGAR", no_wrap=True),
             bgcolor=pagar_button_bgcolor,
             color=pagar_button_color,
             style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
             on_click=lambda e: self._open_modal_pago(e),
         )
         rutina_button = ft.FilledButton(
-            content=ft.Text(value="RUTINA"),
+            content=ft.Text(value="RUTINA", no_wrap=True),
             bgcolor=rutina_button_bgcolor,
             color=rutina_button_color,
             style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
             on_click=lambda e: self._open_modal_rutina(e),
+
         )
         detalles_button = ft.FilledButton(
-            content=ft.Text(value="DETALLES"),
+            content=ft.Text(value="DETALLES", no_wrap=True),
             bgcolor=THEME_TEAL,
             color=THEME_TEAL_TEXT,
             style=ft.ButtonStyle(mouse_cursor=ft.MouseCursor.CLICK),
@@ -124,7 +125,15 @@ class MemberCard(ft.Container):
                 ft.ResponsiveRow(
                     controls=[
                         ft.Row(
-                            controls=[pagar_button, rutina_button, detalles_button, delete_button],
+                            controls=[
+                                ft.Container(content=pagar_button, width=110),
+                                ft.Container(content=rutina_button, width=110),
+                                ft.Container(content=detalles_button, width=110),
+                                ft.Container(content=delete_button, width=110),
+                            ],
+                            spacing=10,
+                            run_spacing=10,
+                            wrap=True,
                             alignment=ft.MainAxisAlignment.CENTER,
                         ),
                     ],
