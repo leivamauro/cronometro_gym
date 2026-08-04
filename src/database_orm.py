@@ -3,10 +3,12 @@ import os
 from datetime import datetime, timedelta
 #terceros
 from dateutil.relativedelta import relativedelta
+from sqlalchemy import event
 from sqlalchemy.orm import (
     DeclarativeBase,
     Session,
     sessionmaker,
+    relationship,
 )
 from sqlalchemy import (
     String,
@@ -26,6 +28,12 @@ from sqlalchemy import (
 #conxion a la base de datos
 engine = create_engine("sqlite:///storage/data/gestion_pagos.db", echo=False)
 
+@event.listens_for(engine, "connect")
+def _set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys = ON")
+    cursor.close()
+
 # relacion entre la conexion y los modelos
 SessionLocal = sessionmaker(engine)
 session = SessionLocal()
@@ -42,6 +50,9 @@ class Miembro(Base):
     fecha_vencimiento = Column(DateTime())
     es_prueba = Column(Boolean(), default=True) # empieza como prueba por defecto
     tiempo_prueba_dias = Column(Integer(), default=0) # duracion de la prueba en dias, por defecto 1 dia
+
+    historial_pagos = relationship("HistorialPago", cascade="all, delete-orphan", back_populates="_miembro")
+    cronogramas = relationship("Cronograma", cascade="all, delete-orphan", back_populates="_miembro")
 
     def __str__(self):
         return self.nombre
@@ -65,6 +76,8 @@ class HistorialPago(Base):
     monto = Column(Numeric(precision=10, scale=2), nullable=False)
     meses_abonados = Column(Integer(), default=1)
 
+    _miembro = relationship("Miembro", back_populates="historial_pagos")
+
     def __str__(self):
         return f"Pago de {self.monto} el {self.fecha_pago} por {self.meses_abonados} meses"
 
@@ -79,6 +92,8 @@ class Cronograma(Base):
     semana = Column(Integer(), nullable=True)
     descripcion = Column(String(200), nullable=True)
     repetir_semanal = Column(Boolean(), default=True)
+
+    _miembro = relationship("Miembro", back_populates="cronogramas")
 
     def __str__(self):
         return f"Día {self.dia_semana}: {self.descripcion}"
