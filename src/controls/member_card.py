@@ -26,6 +26,12 @@ class MemberCard(ft.Container):
         self.bgcolor = THEME_CARD_BG
         self.border_radius = 12
         self.margin = ft.Margin.only(bottom=10)
+        self.border = ft.Border(
+            left=ft.BorderSide(8, self.status_color),
+            top=None,
+            right=None,
+            bottom=None,
+        )
 
         self.padding = ft.Padding(20, 20, 20, 20)
 
@@ -44,14 +50,6 @@ class MemberCard(ft.Container):
         else:
             rutina_button_bgcolor = THEME_GREY_BUTTON_BG
             rutina_button_color = THEME_TEXT_PRIMARY
-
-        # Semáforo de estado (Círculo de color)
-        traffic_light = ft.Container(
-            width=60,
-            height=60,
-            border_radius=30,
-            bgcolor=self.status_color,
-        )
 
         # Datos del miembro (Nombre y Estado)
         name_text = ft.Text(
@@ -102,23 +100,14 @@ class MemberCard(ft.Container):
 
         self.content = ft.ResponsiveRow(
             controls=[
-                ft.Row(
-                    controls=[traffic_light],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    col={
-                        ft.ResponsiveRowBreakpoint.XS: 12,
-                        ft.ResponsiveRowBreakpoint.MD: 2,
-                        ft.ResponsiveRowBreakpoint.LG: 1,
-                    },
-                ),
                 ft.Column(
                     controls=[name_text, status_text],
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.START,
                     col={
                         ft.ResponsiveRowBreakpoint.XS: 12,
-                        ft.ResponsiveRowBreakpoint.MD: 5,
-                        ft.ResponsiveRowBreakpoint.LG: 7,
+                        ft.ResponsiveRowBreakpoint.MD: 7,
+                        ft.ResponsiveRowBreakpoint.LG: 8,
                     },
                     expand=True,
                 ),
